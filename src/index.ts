@@ -92,7 +92,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   // #region titleContainer
   const titleContainer = new Container();
 
-  // 按鈕
+  // 拉基大冒險大標題 Rect
   const titleGraphic = new Graphics();
   titleGraphic.beginFill(0x000000);
   titleGraphic.lineStyle(1, 0x707070, 1);
@@ -106,7 +106,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     fill: '#FFFFFF',
   });
 
-  // 按鈕 Start 文字
+  // 拉基大冒險文字
   const titleText = new Text('海底拉基大冒險', titleTextStyle);
   titleText.position.set(
     titleGraphic.width / 2 - titleText.width / 2,
@@ -114,7 +114,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   );
   titleContainer.addChild(titleText);
 
-  // titleContainer 填完內容後定位
+  // titleContainer 填完內容後再次定位
   titleContainer.position.set(app.stage.width / 2 - titleContainer.width / 2, 271);
   gameStartScene.addChild(titleContainer);
   // #endregion
@@ -149,7 +149,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   );
   startButtonContainer.addChild(startButtonText);
 
-  // startButtonContainer 填完內容後定位
+  // startButtonContainer 填完內容後再次定位
   startButtonContainer.position.set(app.stage.width / 2 - startButtonContainer.width / 2, 466);
   gameStartScene.addChild(startButtonContainer);
   // #endregion
