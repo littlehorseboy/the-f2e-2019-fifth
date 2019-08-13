@@ -9,13 +9,13 @@ interface KeyI {
 }
 
 export default function keyboard(keyCode: number): KeyI {
-  const key = {
+  const key: KeyI = {
     code: keyCode,
     isDown: false,
     isUp: true,
     press: undefined,
     release: undefined,
-    downHandler(event): void {
+    downHandler(event: KeyboardEvent): void {
       event.preventDefault();
       if (event.keyCode === key.code) {
         if (key.isUp && key.press) {
@@ -26,7 +26,7 @@ export default function keyboard(keyCode: number): KeyI {
         key.isUp = false;
       }
     },
-    upHandler(event): void {
+    upHandler(event: KeyboardEvent): void {
       event.preventDefault();
 
       if (event.keyCode === key.code) {

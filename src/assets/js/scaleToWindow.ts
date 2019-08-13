@@ -1,4 +1,7 @@
-export default function scaleToWindow(externalCanvas, backgroundColor?): number {
+export default function scaleToWindow(
+  externalCanvas: HTMLCanvasElement,
+  backgroundColor?: string,
+): number {
   const canvas = externalCanvas;
   let center;
 
@@ -56,7 +59,9 @@ export default function scaleToWindow(externalCanvas, backgroundColor?): number 
   canvas.style.display = 'block';
 
   // 4. Set the color of the HTML body background
-  document.body.style.backgroundColor = backgroundColor;
+  if (backgroundColor) {
+    document.body.style.backgroundColor = backgroundColor;
+  }
 
   // Fix some quirkiness in scaling for Safari
   const ua = navigator.userAgent.toLowerCase();
