@@ -1,14 +1,17 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./dist",
     "sourceMap": true,
     "module": "esnext",
     "moduleResolution": "node",
     "target": "es5",
     "allowJs": true,
+    "allowSyntheticDefaultImports": true,
     "jsx": "react",
-    "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
+    "noImplicitAny": true,
     "strictNullChecks": true,
     "esModuleInterop": true
   }
