@@ -1,6 +1,11 @@
 import 'normalize.css';
 import * as PIXI from 'pixi.js';
 
+require('./index.css');
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const FontFaceObserver = require('fontfaceobserver');
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const bgFarImg = require('./assets/images/bg-far.png');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -13,6 +18,7 @@ const {
   Sprite,
   Graphics,
   Rectangle,
+  Text,
   Texture,
   TilingSprite,
 } = PIXI;
@@ -83,16 +89,44 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   gradientBg.height = 800;
   gameStartScene.addChild(gradientBg);
 
-  // startButtonContainer
+  // #region titleContainer
+  const titleContainer = new Container();
+
+  // 按鈕
+  const titleGraphic = new Graphics();
+  titleGraphic.beginFill(0x000000);
+  titleGraphic.lineStyle(1, 0x707070, 1);
+  titleGraphic.drawRect(0, 0, 611, 129);
+  titleGraphic.endFill();
+  titleContainer.addChild(titleGraphic);
+
+  const titleTextStyle = new PIXI.TextStyle({
+    fontFamily: 'regularPixelMplus10',
+    fontSize: 78,
+    fill: '#FFFFFF',
+  });
+
+  // 按鈕 Start 文字
+  const titleText = new Text('海底拉基大冒險', titleTextStyle);
+  titleText.position.set(
+    titleGraphic.width / 2 - titleText.width / 2,
+    titleGraphic.height / 2 - titleText.height / 2,
+  );
+  titleContainer.addChild(titleText);
+
+  // titleContainer 填完內容後定位
+  titleContainer.position.set(app.stage.width / 2 - titleContainer.width / 2, 271);
+  gameStartScene.addChild(titleContainer);
+  // #endregion
+
+  // #region startButtonContainer
   const startButtonContainer = new Container();
-  gameStartScene.addChild(startButtonContainer);
 
   // 按鈕
   const startButtonGraphic = new Graphics();
   startButtonGraphic.lineStyle(5, 0xFFFFFF, 1);
   startButtonGraphic.drawRect(0, 0, 240, 80);
   startButtonGraphic.endFill();
-  startButtonGraphic.position.set(app.stage.width / 2 - startButtonGraphic.width / 2, 466);
   startButtonGraphic.hitArea = new Rectangle(0, 0, 240, 80);
   startButtonGraphic.interactive = true;
   startButtonGraphic.buttonMode = true;
@@ -100,6 +134,25 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     gameStartToNext = true;
   });
   startButtonContainer.addChild(startButtonGraphic);
+
+  const startButtonTextStyle = new PIXI.TextStyle({
+    fontFamily: 'regularPixelMplus10',
+    fontSize: 56,
+    fill: '#FFFFFF',
+  });
+
+  // 按鈕 Start 文字
+  const startButtonText = new Text('Start', startButtonTextStyle);
+  startButtonText.position.set(
+    startButtonGraphic.width / 2 - startButtonText.width / 2,
+    startButtonGraphic.height / 2 - startButtonText.height / 2,
+  );
+  startButtonContainer.addChild(startButtonText);
+
+  // startButtonContainer 填完內容後定位
+  startButtonContainer.position.set(app.stage.width / 2 - startButtonContainer.width / 2, 466);
+  gameStartScene.addChild(startButtonContainer);
+  // #endregion
 
   // 遊戲區
   gameScene = new Container();
@@ -133,8 +186,20 @@ const loadProgressHandler = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResou
   console.log(`progress ${pixiLoader.progress} %`);
 };
 
-new Loader()
-  .add(bgFarImg)
-  .add(bgMidImg)
-  .on('progress', loadProgressHandler)
-  .load(setup);
+
+const init = (): void => {
+  new Loader()
+    .add('bgFarImg', bgFarImg)
+    .add('bgMidImg', bgMidImg)
+    .on('progress', loadProgressHandler)
+    .load(setup);
+};
+
+const font = new FontFaceObserver('regularPixelMplus10');
+
+// 可以確保字型載入後才開始 init，目前不管有沒有成功載入此字型都會繼續跑
+font.load().then((): void => {
+  init();
+}, (): void => {
+  init();
+});

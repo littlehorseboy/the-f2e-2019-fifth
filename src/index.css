@@ -1,0 +1,13 @@
+@font-face {
+  font-family: 'regularPixelMplus10';
+  font-style: normal;
+  font-weight: normal;
+  src: url(./assets/fonts//PixelMplus-20130602/PixelMplus10-Regular.ttf) format('truetype');
+}
+
+body {
+  background-color: #151D46;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+}
