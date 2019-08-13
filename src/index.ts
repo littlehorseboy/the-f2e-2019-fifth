@@ -70,7 +70,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     const canvas = document.createElement('canvas');
     canvas.width = 1;
     canvas.height = quality;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
     const grd = ctx.createLinearGradient(0, 0, 0, quality);
     grd.addColorStop(0, '#9FEFFF');
