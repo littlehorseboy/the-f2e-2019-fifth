@@ -100,13 +100,13 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   titleGraphic.endFill();
   titleContainer.addChild(titleGraphic);
 
+  // 拉基大冒險文字
   const titleTextStyle = new PIXI.TextStyle({
     fontFamily: 'regularPixelMplus10',
     fontSize: 78,
     fill: '#FFFFFF',
   });
 
-  // 拉基大冒險文字
   const titleText = new Text('海底拉基大冒險', titleTextStyle);
   titleText.position.set(
     titleGraphic.width / 2 - titleText.width / 2,
@@ -135,13 +135,13 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   });
   startButtonContainer.addChild(startButtonGraphic);
 
+  // 按鈕 Start 文字
   const startButtonTextStyle = new PIXI.TextStyle({
     fontFamily: 'regularPixelMplus10',
     fontSize: 56,
     fill: '#FFFFFF',
   });
 
-  // 按鈕 Start 文字
   const startButtonText = new Text('Start', startButtonTextStyle);
   startButtonText.position.set(
     startButtonGraphic.width / 2 - startButtonText.width / 2,
@@ -152,6 +152,18 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   // startButtonContainer 填完內容後再次定位
   startButtonContainer.position.set(app.stage.width / 2 - startButtonContainer.width / 2, 466);
   gameStartScene.addChild(startButtonContainer);
+  // #endregion
+
+  // #region 業障文字
+  const subTitleTextStyle = new PIXI.TextStyle({
+    fontFamily: 'regularPixelMplus10',
+    fontSize: 56,
+    fill: '#FFFFFF',
+  });
+
+  const subTitleText = new Text('業障', subTitleTextStyle);
+  subTitleText.position.set(app.stage.width / 2 - subTitleText.width / 2, 585);
+  gameStartScene.addChild(subTitleText);
   // #endregion
 
   // 遊戲區
