@@ -23,8 +23,8 @@ const coralReefImg = require('./assets/images/F2E_week5/Coral_reef.png');
 const anemoneImg = require('./assets/images/F2E_week5/anemone.png');
 const coralImg = require('./assets/images/F2E_week5/coral.png');
 const anemonesImg = require('./assets/images/F2E_week5/Sprite-0002.png');
-const bgFarImg = require('./assets/images/bg-far.png');
-const bgMidImg = require('./assets/images/bg-mid.png');
+const bgRocksImg = require('./assets/images/F2E_week5/bg-rocks.png');
+const bgFishesImg = require('./assets/images/F2E_week5/bg-fishes.png');
 
 const {
   Application,
@@ -48,12 +48,26 @@ const app = new Application({
 
 document.body.appendChild(app.view);
 
-let state: (delta: number) => void; // 遊戲場景狀態
+let state: (delta: number, distance?: number) => void; // 遊戲場景狀態
 let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
+interface GameSceneObjectI {
+  background90: null | PIXI.Sprite;
+  background60: null | PIXI.Sprite;
+  background30: null | PIXI.Sprite;
+  bgRocks: null | PIXI.TilingSprite;
+  bgLeftFishes: null | PIXI.TilingSprite;
+  bgRightFishes: null | PIXI.TilingSprite;
+}
+const gameSceneObject: GameSceneObjectI = {
+  background90: null,
+  background60: null,
+  background30: null,
+  bgRocks: null,
+  bgLeftFishes: null,
+  bgRightFishes: null,
+};
 let gameKarmaScene: PIXI.Container; // 業障場景
-let bgFar: PIXI.TilingSprite;
-let bgMid: PIXI.TilingSprite;
 
 const end = (): void => {
 
@@ -68,7 +82,7 @@ const karma = (): void => {
   }
 };
 
-const play = (delta: number): void => {
+const play = (distance: number, delta: number): void => {
   if (gameStartScene.visible) {
     gameStartScene.visible = false;
   }
@@ -76,8 +90,44 @@ const play = (delta: number): void => {
     gameScene.visible = true;
   }
 
-  bgFar.tilePosition.set(bgFar.tilePosition.x - 0.128, bgFar.tilePosition.y);
-  bgMid.tilePosition.set(bgMid.tilePosition.x - 0.64, bgMid.tilePosition.y);
+  if (
+    gameSceneObject.background90 && gameSceneObject.background60 && gameSceneObject.background30
+  ) {
+    if (distance === 90) {
+      gameSceneObject.background90.visible = true;
+      gameSceneObject.background60.visible = false;
+      gameSceneObject.background30.visible = false;
+    } else if (distance === 60) {
+      gameSceneObject.background90.visible = false;
+      gameSceneObject.background60.visible = true;
+      gameSceneObject.background30.visible = false;
+    } else if (distance === 30) {
+      gameSceneObject.background90.visible = false;
+      gameSceneObject.background60.visible = false;
+      gameSceneObject.background30.visible = true;
+    }
+  }
+
+  if (gameSceneObject.bgRocks) {
+    gameSceneObject.bgRocks.tilePosition.set(
+      gameSceneObject.bgRocks.tilePosition.x - 0.5,
+      gameSceneObject.bgRocks.tilePosition.y,
+    );
+  }
+
+  if (gameSceneObject.bgLeftFishes) {
+    gameSceneObject.bgLeftFishes.tilePosition.set(
+      gameSceneObject.bgLeftFishes.tilePosition.x - 1,
+      gameSceneObject.bgLeftFishes.tilePosition.y,
+    );
+  }
+
+  if (gameSceneObject.bgRightFishes) {
+    gameSceneObject.bgRightFishes.tilePosition.set(
+      gameSceneObject.bgRightFishes.tilePosition.x - 1,
+      gameSceneObject.bgRightFishes.tilePosition.y,
+    );
+  }
 };
 
 const start = (): void => {
@@ -94,7 +144,7 @@ const gameLoop = (delta: number): void => {
 };
 
 // 創造由上而下的漸層背景
-const createGradTexture = (): PIXI.Texture => {
+const createGradTexture = (firstStopColor: string, secondStopColor: string): PIXI.Texture => {
   const quality = 256;
   const canvas = document.createElement('canvas');
   canvas.width = 1;
@@ -102,8 +152,8 @@ const createGradTexture = (): PIXI.Texture => {
   const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
   const grd = ctx.createLinearGradient(0, 0, 0, quality);
-  grd.addColorStop(0, '#9FEFFF');
-  grd.addColorStop(1, '#36479C');
+  grd.addColorStop(0, firstStopColor);
+  grd.addColorStop(1, secondStopColor);
 
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, 1, quality);
@@ -129,7 +179,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
 
     const background = (): void => {
       // 背景
-      const gradTexture = createGradTexture();
+      const gradTexture = createGradTexture('#9FEFFF', '#36479C');
       const gradientBg = new Sprite(gradTexture);
       gradientBg.width = 1280;
       gradientBg.height = 800;
@@ -179,7 +229,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       startButtonGraphic.interactive = true;
       startButtonGraphic.buttonMode = true;
       startButtonGraphic.on('click', (): void => {
-        state = play;
+        state = play.bind(undefined, 90);
       });
       startButtonContainer.addChild(startButtonGraphic);
 
@@ -329,6 +379,81 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     toolbar();
   };
 
+  const initGameScene = (): void => {
+    // global gameScene 遊戲區
+    gameScene = new Container();
+    gameScene.visible = false;
+    app.stage.addChild(gameScene);
+
+    gameSceneObject.background90 = ((): PIXI.Sprite => {
+      // 背景 90M
+      const gradTexture = createGradTexture('#63CFE5', '#76A6E0');
+      const gradientBg = new Sprite(gradTexture);
+      gradientBg.width = 1280;
+      gradientBg.height = 800;
+
+      gameScene.addChild(gradientBg);
+
+      return gradientBg;
+    })();
+
+    gameSceneObject.background60 = ((): PIXI.Sprite => {
+      // 背景 60M
+      const gradTexture = createGradTexture('#ACDBE5', '#B3C7E0');
+      const gradientBg = new Sprite(gradTexture);
+      gradientBg.width = 1280;
+      gradientBg.height = 800;
+
+      gameScene.addChild(gradientBg);
+
+      return gradientBg;
+    })();
+
+    gameSceneObject.background30 = ((): PIXI.Sprite => {
+      // 背景 30M
+      const gradTexture = createGradTexture('#CEE1E5', '#CAD4E0');
+      const gradientBg = new Sprite(gradTexture);
+      gradientBg.width = 1280;
+      gradientBg.height = 800;
+
+      gameScene.addChild(gradientBg);
+
+      return gradientBg;
+    })();
+
+    // 背景岩石群
+    const rocksTexture = Texture.from(bgRocksImg);
+    gameSceneObject.bgRocks = new TilingSprite(
+      rocksTexture,
+      rocksTexture.baseTexture.width,
+      rocksTexture.baseTexture.height,
+    );
+    gameSceneObject.bgRocks.position.set(
+      0,
+      app.renderer.height - gameSceneObject.bgRocks.height,
+    );
+    gameScene.addChild(gameSceneObject.bgRocks);
+
+    // 背景魚群 (左)
+    const fishesTexture = Texture.from(bgFishesImg);
+    gameSceneObject.bgLeftFishes = new TilingSprite(
+      fishesTexture,
+      fishesTexture.baseTexture.width,
+      fishesTexture.baseTexture.height,
+    );
+    gameSceneObject.bgLeftFishes.position.set(209, 251);
+    gameScene.addChild(gameSceneObject.bgLeftFishes);
+
+    // 背景魚群 (右)
+    gameSceneObject.bgRightFishes = new TilingSprite(
+      fishesTexture,
+      fishesTexture.baseTexture.width,
+      fishesTexture.baseTexture.height,
+    );
+    gameSceneObject.bgRightFishes.position.set(640, 80);
+    gameScene.addChild(gameSceneObject.bgRightFishes);
+  };
+
   const initKarmaScene = (): void => {
     // 業障列表
     gameKarmaScene = new Container();
@@ -425,31 +550,10 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   };
 
   initStartScene();
+  initGameScene();
   initKarmaScene();
 
-  // global gameScene 遊戲區
-  gameScene = new Container();
-  gameScene.visible = false;
-  app.stage.addChild(gameScene);
-
-  const farTexture = Texture.from(bgFarImg);
-  bgFar = new TilingSprite(
-    farTexture,
-    farTexture.baseTexture.width,
-    farTexture.baseTexture.height,
-  );
-  gameScene.addChild(bgFar);
-
-  const midTexture = Texture.from(bgMidImg);
-  bgMid = new TilingSprite(
-    midTexture,
-    midTexture.baseTexture.width,
-    midTexture.baseTexture.height,
-  );
-  bgMid.position.set(0, 128);
-  gameScene.addChild(bgMid);
-
-  state = start;
+  state = play.bind(undefined, 90);
 
   app.ticker.add((delta: number): void => gameLoop(delta));
 };
@@ -478,8 +582,8 @@ const init = (): void => {
     .add('anemoneImg', anemoneImg)
     .add('coralImg', coralImg)
     .add('anemonesImg', anemonesImg)
-    .add('bgFarImg', bgFarImg)
-    .add('bgMidImg', bgMidImg)
+    .add('bgRocksImg', bgRocksImg)
+    .add('bgFishesImg', bgFishesImg)
     .on('progress', loadProgressHandler)
     .load(setup);
 };
