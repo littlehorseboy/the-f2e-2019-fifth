@@ -21,6 +21,7 @@ const {
   Graphics,
   Rectangle,
   Text,
+  TextStyle,
   Texture,
   TilingSprite,
 } = PIXI;
@@ -118,7 +119,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       titleContainer.addChild(titleGraphic);
 
       // 拉基大冒險標題文字
-      const textStyle = new PIXI.TextStyle({
+      const textStyle = new TextStyle({
         fontFamily: 'regularPixelMplus10',
         fontSize: 78,
         fill: '#FFFFFF',
@@ -158,7 +159,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       startButtonContainer.addChild(startButtonGraphic);
 
       // 按鈕文字
-      const textStyle = new PIXI.TextStyle({
+      const textStyle = new TextStyle({
         fontFamily: 'regularPixelMplus10',
         fontSize: 56,
         fill: '#FFFFFF',
@@ -182,7 +183,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
 
     const karmaButton = (): void => {
       // 業障文字 兼 按鈕
-      const textStyle = new PIXI.TextStyle({
+      const textStyle = new TextStyle({
         fontFamily: 'regularPixelMplus10',
         fontSize: 56,
         fill: '#FFFFFF',
@@ -235,7 +236,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       // toolbarContainer
       const toolbarContainer = new Container();
 
-      const textStyle = new PIXI.TextStyle({
+      const textStyle = new TextStyle({
         fontFamily: 'regularPixelMplus10',
         fontSize: 30,
         fill: '#FFFFFF',
