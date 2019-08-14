@@ -7,9 +7,22 @@ require('./index.css');
 const FontFaceObserver = require('fontfaceobserver');
 
 /* eslint-disable @typescript-eslint/no-var-requires */
+const plasticBagDown = require('./assets/images/F2E_week5/down.png');
+const plasticBagJump = require('./assets/images/F2E_week5/jump.png');
 const bgRockImgLeft = require('./assets/images/bg-rock/rock2.png');
 const bgRockImgCenter = require('./assets/images/bg-rock/rock3.png');
 const bgRockImgRight = require('./assets/images/bg-rock/rock.png');
+const turtleImg = require('./assets/images/F2E_week5/turtle.png');
+const cheilinusUndulatusImg = require('./assets/images/F2E_week5/龍王鯛.png');
+const bolbometoponMuricatumImg = require('./assets/images/F2E_week5/龍頭鸚哥魚.png');
+const seahorseImg = require('./assets/images/F2E_week5/Seahorse.png');
+const littleTurtleImg = require('./assets/images/F2E_week5/little-turtle.png');
+const fishOrangeImg = require('./assets/images/F2E_week5/fish.png');
+const fishYellowImg = require('./assets/images/F2E_week5/fish2.png');
+const coralReefImg = require('./assets/images/F2E_week5/Coral_reef.png');
+const anemoneImg = require('./assets/images/F2E_week5/anemone.png');
+const coralImg = require('./assets/images/F2E_week5/coral.png');
+const anemonesImg = require('./assets/images/F2E_week5/Sprite-0002.png');
 const bgFarImg = require('./assets/images/bg-far.png');
 const bgMidImg = require('./assets/images/bg-mid.png');
 
@@ -30,6 +43,7 @@ const app = new Application({
   antialias: true,
   width: 1280,
   height: 800,
+  backgroundColor: 0xE0E0E0,
 });
 
 document.body.appendChild(app.view);
@@ -38,8 +52,6 @@ let state: (delta: number) => void; // 遊戲場景狀態
 let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
 let gameKarmaScene: PIXI.Container; // 業障場景
-let gameStartToNext = false;
-let gameStartToKarma = false;
 let bgFar: PIXI.TilingSprite;
 let bgMid: PIXI.TilingSprite;
 
@@ -47,24 +59,33 @@ const end = (): void => {
 
 };
 
+const karma = (): void => {
+  if (gameStartScene.visible) {
+    gameStartScene.visible = false;
+  }
+  if (!gameKarmaScene.visible) {
+    gameKarmaScene.visible = true;
+  }
+};
+
 const play = (delta: number): void => {
+  if (gameStartScene.visible) {
+    gameStartScene.visible = false;
+  }
+  if (!gameScene.visible) {
+    gameScene.visible = true;
+  }
+
   bgFar.tilePosition.set(bgFar.tilePosition.x - 0.128, bgFar.tilePosition.y);
   bgMid.tilePosition.set(bgMid.tilePosition.x - 0.64, bgMid.tilePosition.y);
 };
 
 const start = (): void => {
-  if (gameStartToNext) {
-    gameStartScene.visible = false;
-    gameScene.visible = true;
-
-    state = play;
+  if (!gameStartScene.visible) {
+    gameStartScene.visible = true;
   }
-
-  if (gameStartToKarma) {
-    gameStartScene.visible = false;
-    gameKarmaScene.visible = true;
-
-    state = play;
+  if (gameKarmaScene.visible) {
+    gameKarmaScene.visible = false;
   }
 };
 
@@ -90,12 +111,22 @@ const createGradTexture = (): PIXI.Texture => {
   return Texture.from(canvas);
 };
 
+// 創造 PixelMplus 文字
+const createPixelMplusTextStyle = (
+  fontSize: number,
+  fill?: string,
+): PIXI.TextStyle => new TextStyle({
+  fontFamily: 'regularPixelMplus10',
+  fontSize,
+  fill: fill ? `${fill}` : '#FFFFFF',
+});
+
 const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => {
   // global gameStartScene 遊戲開始畫面場景
-  gameStartScene = new Container();
-  app.stage.addChild(gameStartScene);
-
   const initStartScene = (): void => {
+    gameStartScene = new Container();
+    app.stage.addChild(gameStartScene);
+
     const background = (): void => {
       // 背景
       const gradTexture = createGradTexture();
@@ -119,13 +150,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       titleContainer.addChild(titleGraphic);
 
       // 拉基大冒險標題文字
-      const textStyle = new TextStyle({
-        fontFamily: 'regularPixelMplus10',
-        fontSize: 78,
-        fill: '#FFFFFF',
-      });
-
-      const titleText = new Text('海底拉基大冒險', textStyle);
+      const titleText = new Text('海底拉基大冒險', createPixelMplusTextStyle(78));
       titleText.position.set(
         titleGraphic.width / 2 - titleText.width / 2,
         titleGraphic.height / 2 - titleText.height / 2,
@@ -154,18 +179,12 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       startButtonGraphic.interactive = true;
       startButtonGraphic.buttonMode = true;
       startButtonGraphic.on('click', (): void => {
-        gameStartToNext = true;
+        state = play;
       });
       startButtonContainer.addChild(startButtonGraphic);
 
       // 按鈕文字
-      const textStyle = new TextStyle({
-        fontFamily: 'regularPixelMplus10',
-        fontSize: 56,
-        fill: '#FFFFFF',
-      });
-
-      const startButtonText = new Text('Start', textStyle);
+      const startButtonText = new Text('Start', createPixelMplusTextStyle(56));
       startButtonText.position.set(
         startButtonGraphic.width / 2 - startButtonText.width / 2,
         startButtonGraphic.height / 2 - startButtonText.height / 2,
@@ -183,13 +202,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
 
     const karmaButton = (): void => {
       // 業障文字 兼 按鈕
-      const textStyle = new TextStyle({
-        fontFamily: 'regularPixelMplus10',
-        fontSize: 56,
-        fill: '#FFFFFF',
-      });
-
-      const karmaButtonText = new Text('業障', textStyle);
+      const karmaButtonText = new Text('業障', createPixelMplusTextStyle(56));
       karmaButtonText.position.set(
         app.renderer.width / 2 - karmaButtonText.width / 2,
         585,
@@ -198,10 +211,26 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       karmaButtonText.interactive = true;
       karmaButtonText.buttonMode = true;
       karmaButtonText.on('click', (): void => {
-        gameStartToKarma = true;
+        state = karma;
       });
 
       gameStartScene.addChild(karmaButtonText);
+    };
+
+    const plasticBag = (): void => {
+      const rockCenter = Sprite.from(plasticBagJump);
+      rockCenter.position.set(
+        130,
+        414,
+      );
+      gameStartScene.addChild(rockCenter);
+
+      const rockRight = Sprite.from(plasticBagDown);
+      rockRight.position.set(
+        1011,
+        104,
+      );
+      gameStartScene.addChild(rockRight);
     };
 
     const rocks = (): void => {
@@ -229,18 +258,14 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       );
       rockContainer.addChild(rockRight);
 
-      app.stage.addChild(rockContainer);
+      gameStartScene.addChild(rockContainer);
     };
 
     const toolbar = (): void => {
       // toolbarContainer
       const toolbarContainer = new Container();
 
-      const textStyle = new TextStyle({
-        fontFamily: 'regularPixelMplus10',
-        fontSize: 30,
-        fill: '#FFFFFF',
-      });
+      const textStyle = createPixelMplusTextStyle(30);
 
       // toolbar Rectangle
       const toolbarGraphic = new Graphics();
@@ -299,11 +324,108 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     title();
     startButton();
     karmaButton();
+    plasticBag();
     rocks();
     toolbar();
   };
 
+  const initKarmaScene = (): void => {
+    // 業障列表
+    gameKarmaScene = new Container();
+    gameKarmaScene.visible = false;
+    app.stage.addChild(gameKarmaScene);
+
+    const titleText = new Text('哀呀~業障重阿', createPixelMplusTextStyle(60, '#151D46'));
+    titleText.position.set(
+      app.renderer.width / 2 - titleText.width / 2,
+      40,
+    );
+    gameKarmaScene.addChild(titleText);
+
+    const subTitleText = new Text('(2/10)', createPixelMplusTextStyle(50, '#151D46'));
+    subTitleText.position.set(
+      app.renderer.width / 2 - subTitleText.width / 2,
+      108,
+    );
+    gameKarmaScene.addChild(subTitleText);
+
+    // 海洋生物們
+    const turtle = Sprite.from(turtleImg);
+    turtle.position.set(139, 165);
+
+    const cheilinus = Sprite.from(cheilinusUndulatusImg);
+    cheilinus.position.set(485, 217);
+
+    const bolbometopon = Sprite.from(bolbometoponMuricatumImg);
+    bolbometopon.position.set(765, 217);
+
+    const seahorse = Sprite.from(seahorseImg);
+    seahorse.position.set(1045, 220);
+
+    const littleTurtle = Sprite.from(littleTurtleImg);
+    littleTurtle.position.set(233, 400);
+
+    const fishOrange = Sprite.from(fishOrangeImg);
+    fishOrange.position.set(484, 405);
+
+    const fishYellow = Sprite.from(fishYellowImg);
+    fishYellow.position.set(679, 400);
+
+    const coralReef = Sprite.from(coralReefImg);
+    coralReef.position.set(138, 521);
+
+    const anemone = Sprite.from(anemoneImg);
+    anemone.position.set(560, 600);
+
+    const coral = Sprite.from(coralImg);
+    coral.position.set(720, 521);
+
+    const anemones = Sprite.from(anemonesImg);
+    anemones.position.set(897, 391);
+
+    gameKarmaScene.addChild(turtle);
+    gameKarmaScene.addChild(cheilinus);
+    gameKarmaScene.addChild(bolbometopon);
+    gameKarmaScene.addChild(seahorse);
+    gameKarmaScene.addChild(littleTurtle);
+    gameKarmaScene.addChild(fishOrange);
+    gameKarmaScene.addChild(fishYellow);
+    gameKarmaScene.addChild(coralReef);
+    gameKarmaScene.addChild(anemone);
+    gameKarmaScene.addChild(coral);
+    gameKarmaScene.addChild(anemones);
+
+    // back 文字 + 框框
+    const backButtonGraphic = new Graphics();
+    backButtonGraphic.lineStyle(3, 0x151D46, 1);
+    backButtonGraphic.drawRect(0, 0, 200, 60);
+    backButtonGraphic.endFill();
+    backButtonGraphic.hitArea = new Rectangle(
+      0, 0, backButtonGraphic.width, backButtonGraphic.height,
+    );
+    backButtonGraphic.interactive = true;
+    backButtonGraphic.buttonMode = true;
+    backButtonGraphic.on('click', (): void => {
+      state = start;
+    });
+    backButtonGraphic.position.set(
+      app.renderer.width / 2 - backButtonGraphic.width / 2,
+      725,
+    );
+    gameKarmaScene.addChild(backButtonGraphic);
+
+    const backButtonText = new Text('Back', createPixelMplusTextStyle(40, '#151D46'));
+    backButtonText.position.set(
+      backButtonGraphic.x
+        + (backButtonGraphic.width / 2)
+        - (backButtonText.width / 2),
+      backButtonGraphic.y + backButtonGraphic.height / 2 - backButtonText.height / 2,
+    );
+    gameKarmaScene.addChild(backButtonText);
+  };
+
   initStartScene();
+  initKarmaScene();
 
   // global gameScene 遊戲區
   gameScene = new Container();
@@ -340,9 +462,22 @@ const loadProgressHandler = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResou
 
 const init = (): void => {
   new Loader()
+    .add('plasticBagDown', plasticBagDown)
+    .add('plasticBagJump', plasticBagJump)
     .add('bgRockImgLeft', bgRockImgLeft)
     .add('bgRockImgCenter', bgRockImgCenter)
     .add('bgRockImgRight', bgRockImgRight)
+    .add('turtleImg', turtleImg)
+    .add('cheilinusUndulatusImg', cheilinusUndulatusImg)
+    .add('bolbometoponMuricatumImg', bolbometoponMuricatumImg)
+    .add('seahorseImg', seahorseImg)
+    .add('littleTurtleImg', littleTurtleImg)
+    .add('fishOrangeImg', fishOrangeImg)
+    .add('fishYellowImg', fishYellowImg)
+    .add('CoralReefImg', coralReefImg)
+    .add('anemoneImg', anemoneImg)
+    .add('coralImg', coralImg)
+    .add('anemonesImg', anemonesImg)
     .add('bgFarImg', bgFarImg)
     .add('bgMidImg', bgMidImg)
     .on('progress', loadProgressHandler)
