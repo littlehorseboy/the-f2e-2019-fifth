@@ -6,9 +6,11 @@ require('./index.css');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const FontFaceObserver = require('fontfaceobserver');
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+/* eslint-disable @typescript-eslint/no-var-requires */
+const bgRockImgLeft = require('./assets/images/bg-rock/rock2.png');
+const bgRockImgCenter = require('./assets/images/bg-rock/rock3.png');
+const bgRockImgRight = require('./assets/images/bg-rock/rock.png');
 const bgFarImg = require('./assets/images/bg-far.png');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const bgMidImg = require('./assets/images/bg-mid.png');
 
 const {
@@ -129,7 +131,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       );
       titleContainer.addChild(titleText);
 
-      // titleContainer 填完內容後再次定位
+      // titleContainer 填完內容後最後定位
       titleContainer.position.set(
         app.renderer.width / 2 - titleContainer.width / 2,
         271,
@@ -169,7 +171,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       );
       startButtonContainer.addChild(startButtonText);
 
-      // startButtonContainer 填完內容後再次定位
+      // startButtonContainer 填完內容後最後定位
       startButtonContainer.position.set(
         app.renderer.width / 2 - startButtonContainer.width / 2,
         466,
@@ -201,48 +203,103 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       gameStartScene.addChild(karmaButtonText);
     };
 
-    // toolbarContainer
-    const toolbarContainer = new Container();
+    const rocks = (): void => {
+      // rockContainer
+      const rockContainer = new Container();
 
-    // 按鈕 Rectangle
-    const toolbarGraphic = new Graphics();
-    toolbarGraphic.lineStyle(1, 0x707070, 1);
-    toolbarGraphic.beginFill(0x151D46);
-    toolbarGraphic.drawRect(0, 0, app.renderer.width, 80);
-    toolbarGraphic.endFill();
-    toolbarGraphic.interactive = true;
-    toolbarGraphic.buttonMode = true;
-    toolbarGraphic.on('click', (): void => {
-      gameStartToNext = true;
-    });
-    toolbarContainer.addChild(toolbarGraphic);
+      const rockLeft = Sprite.from(bgRockImgLeft);
+      rockLeft.position.set(
+        0,
+        app.renderer.height - rockLeft.height,
+      );
+      rockContainer.addChild(rockLeft);
 
-    // 按鈕文字
-    const textStyle = new PIXI.TextStyle({
-      fontFamily: 'regularPixelMplus10',
-      fontSize: 56,
-      fill: '#FFFFFF',
-    });
+      const rockCenter = Sprite.from(bgRockImgCenter);
+      rockCenter.position.set(
+        rockLeft.width,
+        app.renderer.height - rockCenter.height,
+      );
+      rockContainer.addChild(rockCenter);
 
-    const startButtonText = new Text('Start', textStyle);
-    startButtonText.position.set(
-      toolbarGraphic.width / 2 - startButtonText.width / 2,
-      toolbarGraphic.height / 2 - startButtonText.height / 2,
-    );
-    toolbarContainer.addChild(startButtonText);
+      const rockRight = Sprite.from(bgRockImgRight);
+      rockRight.position.set(
+        rockLeft.width + rockCenter.width,
+        app.renderer.height - rockRight.height,
+      );
+      rockContainer.addChild(rockRight);
 
-    // startButtonContainer 填完內容後再次定位
-    toolbarContainer.position.set(
-      0,
-      app.renderer.height - toolbarGraphic.height,
-    );
+      app.stage.addChild(rockContainer);
+    };
 
-    gameStartScene.addChild(toolbarContainer);
+    const toolbar = (): void => {
+      // toolbarContainer
+      const toolbarContainer = new Container();
+
+      const textStyle = new PIXI.TextStyle({
+        fontFamily: 'regularPixelMplus10',
+        fontSize: 30,
+        fill: '#FFFFFF',
+      });
+
+      // toolbar Rectangle
+      const toolbarGraphic = new Graphics();
+      toolbarGraphic.beginFill(0x151D46);
+      toolbarGraphic.lineStyle(1, 0x707070, 1);
+      toolbarGraphic.drawRect(0, 0, app.renderer.width, 80);
+      toolbarGraphic.endFill();
+      toolbarContainer.addChild(toolbarGraphic);
+
+      // toolbar 左邊文字
+      const toolbarLeftText = new Text('Control:', textStyle);
+      toolbarLeftText.position.set(
+        38,
+        toolbarGraphic.height / 2 - toolbarLeftText.height / 2,
+      );
+      toolbarContainer.addChild(toolbarLeftText);
+
+      // toolbar 左邊文字 + 框框
+      const toolbarLeftButtonGraphic = new Graphics();
+      toolbarLeftButtonGraphic.lineStyle(3, 0xFFFFFF, 1);
+      toolbarLeftButtonGraphic.drawRect(0, 0, 113, 41);
+      toolbarLeftButtonGraphic.endFill();
+      toolbarLeftButtonGraphic.position.set(
+        175,
+        toolbarGraphic.height / 2 - toolbarLeftButtonGraphic.height / 2,
+      );
+      toolbarContainer.addChild(toolbarLeftButtonGraphic);
+
+      const toolbarLeftButtonText = new Text('space', textStyle);
+      toolbarLeftButtonText.position.set(
+        toolbarLeftButtonGraphic.x
+          + (toolbarLeftButtonGraphic.width / 2)
+          - (toolbarLeftButtonText.width / 2),
+        toolbarGraphic.height / 2 - toolbarLeftButtonText.height / 2,
+      );
+      toolbarContainer.addChild(toolbarLeftButtonText);
+
+      // toolbar 右邊文字
+      const toolbarRightText = new Text('End Distance: 30 M', textStyle);
+      toolbarRightText.position.set(
+        930,
+        toolbarGraphic.height / 2 - toolbarRightText.height / 2,
+      );
+      toolbarContainer.addChild(toolbarRightText);
+
+      // toolbarContainer 填完內容後最後定位
+      toolbarContainer.position.set(
+        0,
+        app.renderer.height - toolbarGraphic.height,
+      );
+
+      gameStartScene.addChild(toolbarContainer);
+    };
 
     background();
     title();
     startButton();
     karmaButton();
+    rocks();
+    toolbar();
   };
 
   initStartScene();
@@ -282,6 +339,9 @@ const loadProgressHandler = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResou
 
 const init = (): void => {
   new Loader()
+    .add('bgRockImgLeft', bgRockImgLeft)
+    .add('bgRockImgCenter', bgRockImgCenter)
+    .add('bgRockImgRight', bgRockImgRight)
     .add('bgFarImg', bgFarImg)
     .add('bgMidImg', bgMidImg)
     .on('progress', loadProgressHandler)
