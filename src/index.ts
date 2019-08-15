@@ -1,5 +1,6 @@
 import 'normalize.css';
 import * as PIXI from 'pixi.js';
+import keyboard from './assets/js/keyboard';
 
 require('./index.css');
 
@@ -51,6 +52,9 @@ document.body.appendChild(app.view);
 let state: (delta: number, distance?: number) => void; // 遊戲場景狀態
 let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
+interface PlasticBag extends PIXI.Sprite {
+  vy?: number;
+}
 interface GameSceneObjectI {
   background90: null | PIXI.Sprite;
   background60: null | PIXI.Sprite;
@@ -59,6 +63,7 @@ interface GameSceneObjectI {
   bgLeftFishes: null | PIXI.Sprite;
   bgRightFishes: null | PIXI.Sprite;
   toolbarRightText: null | PIXI.Text;
+  plasticBag: null | PlasticBag;
 }
 const gameSceneObject: GameSceneObjectI = {
   background90: null,
@@ -68,6 +73,7 @@ const gameSceneObject: GameSceneObjectI = {
   bgLeftFishes: null,
   bgRightFishes: null,
   toolbarRightText: null,
+  plasticBag: null,
 };
 let gameKarmaScene: PIXI.Container; // 業障場景
 
@@ -132,7 +138,6 @@ const play = (distance: number, delta: number): void => {
     state = play.bind(undefined, 60);
   }
 
-
   if (gameStartScene.visible) {
     gameStartScene.visible = false;
   }
@@ -187,6 +192,21 @@ const play = (distance: number, delta: number): void => {
 
   if (gameSceneObject.toolbarRightText) {
     gameSceneObject.toolbarRightText.text = `End Distance: ${countdown.seconds} M`;
+  }
+
+  if (gameSceneObject.plasticBag) {
+    if (gameSceneObject.plasticBag.vy) {
+      gameSceneObject.plasticBag.y -= gameSceneObject.plasticBag.vy;
+    }
+
+    if (
+      gameSceneObject.plasticBag.y
+        > app.renderer.height - gameSceneObject.plasticBag.height
+    ) {
+      gameSceneObject.plasticBag.y += 0;
+    } else {
+      gameSceneObject.plasticBag.y += 1;
+    }
   }
 };
 
@@ -556,6 +576,35 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     gameSceneObject.bgRightFishes.position.set(640, 80);
     gameScene.addChild(gameSceneObject.bgRightFishes);
 
+    // 萬惡的塑膠袋
+    const plasticBagDownTexture = Texture.from(plasticBagDownImg);
+    const plasticBag = Sprite.from(plasticBagDownTexture);
+    plasticBag.position.set(
+      120,
+      app.renderer.height / 2 - plasticBag.height / 2,
+    );
+    gameScene.addChild(plasticBag);
+
+    const plasticBagJumpTexture = Texture.from(plasticBagJumpImg);
+
+    gameSceneObject.plasticBag = plasticBag;
+
+    // 鍵盤控制萬惡的塑膠袋
+    const space = keyboard(32);
+
+    space.press = (): void => {
+      if (gameSceneObject.plasticBag) {
+        gameSceneObject.plasticBag.texture = plasticBagJumpTexture;
+        gameSceneObject.plasticBag.vy = 5;
+      }
+    };
+
+    space.release = (): void => {
+      if (gameSceneObject.plasticBag) {
+        gameSceneObject.plasticBag.texture = plasticBagDownTexture;
+        gameSceneObject.plasticBag.vy = 0;
+      }
+    };
   };
 
   const initKarmaScene = (): void => {
@@ -657,10 +706,11 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   initGameScene();
   initKarmaScene();
 
-  state = start;
+  // horseTODO: 暫時拿來亂動
+  // state = start;
 
-  // countdown.setCountdownStatus('play');
-  // state = play.bind(undefined, 90);
+  countdown.setCountdownStatus('play');
+  state = play.bind(undefined, 90);
 
   app.ticker.add((delta: number): void => gameLoop(delta));
 };
