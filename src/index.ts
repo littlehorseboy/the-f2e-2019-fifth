@@ -56,8 +56,8 @@ interface GameSceneObjectI {
   background60: null | PIXI.Sprite;
   background30: null | PIXI.Sprite;
   bgRocks: null | PIXI.TilingSprite;
-  bgLeftFishes: null | PIXI.TilingSprite;
-  bgRightFishes: null | PIXI.TilingSprite;
+  bgLeftFishes: null | PIXI.Sprite;
+  bgRightFishes: null | PIXI.Sprite;
 }
 const gameSceneObject: GameSceneObjectI = {
   background90: null,
@@ -116,17 +116,23 @@ const play = (distance: number, delta: number): void => {
   }
 
   if (gameSceneObject.bgLeftFishes) {
-    gameSceneObject.bgLeftFishes.tilePosition.set(
-      gameSceneObject.bgLeftFishes.tilePosition.x - 1,
-      gameSceneObject.bgLeftFishes.tilePosition.y,
+    gameSceneObject.bgLeftFishes.position.set(
+      gameSceneObject.bgLeftFishes.x - 5,
+      gameSceneObject.bgLeftFishes.y,
     );
+    if (gameSceneObject.bgLeftFishes.x < 0 - gameSceneObject.bgLeftFishes.width) {
+      gameSceneObject.bgLeftFishes.x = app.renderer.width + gameSceneObject.bgLeftFishes.width;
+    }
   }
 
   if (gameSceneObject.bgRightFishes) {
-    gameSceneObject.bgRightFishes.tilePosition.set(
-      gameSceneObject.bgRightFishes.tilePosition.x - 1,
-      gameSceneObject.bgRightFishes.tilePosition.y,
+    gameSceneObject.bgRightFishes.position.set(
+      gameSceneObject.bgRightFishes.x - 2,
+      gameSceneObject.bgRightFishes.y,
     );
+    if (gameSceneObject.bgRightFishes.x < 0 - gameSceneObject.bgRightFishes.width) {
+      gameSceneObject.bgRightFishes.x = app.renderer.width + gameSceneObject.bgRightFishes.width;
+    }
   }
 };
 
@@ -435,21 +441,12 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     gameScene.addChild(gameSceneObject.bgRocks);
 
     // 背景魚群 (左)
-    const fishesTexture = Texture.from(bgFishesImg);
-    gameSceneObject.bgLeftFishes = new TilingSprite(
-      fishesTexture,
-      fishesTexture.baseTexture.width,
-      fishesTexture.baseTexture.height,
-    );
+    gameSceneObject.bgLeftFishes = Sprite.from(bgFishesImg);
     gameSceneObject.bgLeftFishes.position.set(209, 251);
     gameScene.addChild(gameSceneObject.bgLeftFishes);
 
     // 背景魚群 (右)
-    gameSceneObject.bgRightFishes = new TilingSprite(
-      fishesTexture,
-      fishesTexture.baseTexture.width,
-      fishesTexture.baseTexture.height,
-    );
+    gameSceneObject.bgRightFishes = Sprite.from(bgFishesImg);
     gameSceneObject.bgRightFishes.position.set(640, 80);
     gameScene.addChild(gameSceneObject.bgRightFishes);
   };
