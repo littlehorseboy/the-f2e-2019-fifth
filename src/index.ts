@@ -52,8 +52,11 @@ document.body.appendChild(app.view);
 let state: (delta: number, distance?: number) => void; // 遊戲場景狀態
 let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
-interface PlasticBag extends PIXI.Sprite {
+interface PlasticBagI extends PIXI.Sprite {
   vy: number;
+}
+interface MarineLifeI extends PIXI.Sprite {
+  vx: number;
 }
 interface GameSceneObjectI {
   background90: null | PIXI.Sprite;
@@ -63,10 +66,11 @@ interface GameSceneObjectI {
   bgLeftFishes: null | PIXI.Sprite;
   bgRightFishes: null | PIXI.Sprite;
   toolbarRightText: null | PIXI.Text;
-  plasticBag: null | PlasticBag;
+  plasticBag: null | PlasticBagI;
   toolbarContainer: null | PIXI.Container;
   toolbarLevelTwoGraphic: null | PIXI.Graphics;
   toolbarLevelThreeGraphic: null | PIXI.Graphics;
+  marineLife: MarineLifeI[];
 }
 const gameSceneObject: GameSceneObjectI = {
   background90: null,
@@ -80,6 +84,7 @@ const gameSceneObject: GameSceneObjectI = {
   toolbarContainer: null,
   toolbarLevelTwoGraphic: null,
   toolbarLevelThreeGraphic: null,
+  marineLife: [],
 };
 let gameKarmaScene: PIXI.Container; // 業障場景
 
@@ -99,6 +104,8 @@ const karma = (): void => {
 class Countdown {
   private internalSeconds: number;
 
+  private timer: undefined | NodeJS.Timeout;
+
   public constructor() {
     this.internalSeconds = 90;
   }
@@ -108,12 +115,10 @@ class Countdown {
   }
 
   public setCountdownStatus(status: 'play' | 'pause' | 'stop'): void {
-    let timer: undefined | NodeJS.Timeout;
-
     if (status === 'play') {
-      timer = setInterval((): void => {
+      this.timer = setInterval((): void => {
         if (this.internalSeconds <= 0) {
-          clearInterval(timer as NodeJS.Timeout);
+          clearInterval(this.timer as NodeJS.Timeout);
         } else {
           this.internalSeconds -= 1;
         }
@@ -121,14 +126,14 @@ class Countdown {
     }
 
     if (status === 'pause') {
-      if (timer) {
-        clearInterval(timer);
+      if (this.timer) {
+        clearInterval(this.timer);
       }
     }
 
     if (status === 'stop') {
-      if (timer) {
-        clearInterval(timer);
+      if (this.timer) {
+        clearInterval(this.timer);
       }
       this.internalSeconds = 90;
     }
@@ -137,19 +142,15 @@ class Countdown {
 
 const countdown = new Countdown();
 
-const play = (distance: number, delta: number): void => {
-  if (countdown.seconds <= 30) {
-    state = play.bind(undefined, 30);
-    if (gameSceneObject.toolbarLevelThreeGraphic) {
-      gameSceneObject.toolbarLevelThreeGraphic.visible = true;
-    }
-  } else if (countdown.seconds <= 60) {
-    state = play.bind(undefined, 60);
-    if (gameSceneObject.toolbarLevelTwoGraphic) {
-      gameSceneObject.toolbarLevelTwoGraphic.visible = true;
-    }
+document.addEventListener('visibilitychange', (): void => {
+  if (document.hidden) {
+    countdown.setCountdownStatus('pause');
+  } else {
+    countdown.setCountdownStatus('play');
   }
+});
 
+const play = (distance: number, delta: number): void => {
   if (gameStartScene.visible) {
     gameStartScene.visible = false;
   }
@@ -157,21 +158,35 @@ const play = (distance: number, delta: number): void => {
     gameScene.visible = true;
   }
 
+  if (countdown.seconds <= 30) {
+    state = play.bind(undefined, 30);
+  } else if (countdown.seconds <= 60) {
+    state = play.bind(undefined, 60);
+  }
+
   if (
     gameSceneObject.background90 && gameSceneObject.background60 && gameSceneObject.background30
   ) {
-    if (distance === 90) {
-      gameSceneObject.background90.visible = true;
-      gameSceneObject.background60.visible = false;
-      gameSceneObject.background30.visible = false;
-    } else if (distance === 60) {
-      gameSceneObject.background90.visible = false;
-      gameSceneObject.background60.visible = true;
-      gameSceneObject.background30.visible = false;
-    } else if (distance === 30) {
+    if (distance <= 30) {
       gameSceneObject.background90.visible = false;
       gameSceneObject.background60.visible = false;
       gameSceneObject.background30.visible = true;
+
+      if (gameSceneObject.toolbarLevelThreeGraphic) {
+        gameSceneObject.toolbarLevelThreeGraphic.visible = true;
+      }
+    } else if (distance <= 60) {
+      gameSceneObject.background90.visible = false;
+      gameSceneObject.background60.visible = true;
+      gameSceneObject.background30.visible = false;
+
+      if (gameSceneObject.toolbarLevelTwoGraphic) {
+        gameSceneObject.toolbarLevelTwoGraphic.visible = true;
+      }
+    } else {
+      gameSceneObject.background90.visible = true;
+      gameSceneObject.background60.visible = false;
+      gameSceneObject.background30.visible = false;
     }
   }
 
@@ -201,7 +216,7 @@ const play = (distance: number, delta: number): void => {
 
   if (gameSceneObject.bgRightFishes) {
     gameSceneObject.bgRightFishes.position.set(
-      gameSceneObject.bgRightFishes.x - 2,
+      gameSceneObject.bgRightFishes.x - 3,
       gameSceneObject.bgRightFishes.y,
     );
     if (gameSceneObject.bgRightFishes.x < 0 - gameSceneObject.bgRightFishes.width) {
@@ -237,6 +252,14 @@ const play = (distance: number, delta: number): void => {
       }
     }
   }
+
+  gameSceneObject.marineLife.forEach((life: MarineLifeI): void => {
+    if (gameSceneObject.toolbarContainer) {
+      Object.assign(life, {
+        x: life.x + life.vx,
+      });
+    }
+  });
 };
 
 const start = (): void => {
@@ -634,8 +657,8 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
 
     const plasticBagJumpTexture = Texture.from(plasticBagJumpImg);
 
-    (plasticBag as PlasticBag).vy = 3; // 預設的下降速度
-    gameSceneObject.plasticBag = plasticBag as PlasticBag;
+    (plasticBag as PlasticBagI).vy = 3; // 預設的下降速度
+    gameSceneObject.plasticBag = plasticBag as PlasticBagI;
 
     // 鍵盤控制萬惡的塑膠袋
     const space = keyboard(32);
@@ -653,6 +676,103 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
         gameSceneObject.plasticBag.vy = 3; // 預設的下降速度
       }
     };
+
+    // 會一直游過來的海洋生物們
+    const coralReef = Sprite.from(coralReefImg);
+    coralReef.position.set(
+      1025,
+      app.renderer.height - coralReef.height - gameSceneObject.toolbarContainer.height,
+    );
+    gameScene.addChild(coralReef);
+    (coralReef as MarineLifeI).vx = -2;
+    gameSceneObject.marineLife = [
+      ...gameSceneObject.marineLife,
+      (coralReef as MarineLifeI),
+    ];
+
+    const turtle = Sprite.from(turtleImg);
+    turtle.position.set(
+      1300,
+      37,
+    );
+    gameScene.addChild(turtle);
+    (turtle as MarineLifeI).vx = -2;
+    gameSceneObject.marineLife = [
+      ...gameSceneObject.marineLife,
+      (turtle as MarineLifeI),
+    ];
+
+    const seahorse = Sprite.from(seahorseImg);
+    seahorse.position.set(
+      1480,
+      500,
+    );
+    gameScene.addChild(seahorse);
+    (seahorse as MarineLifeI).vx = -2;
+    gameSceneObject.marineLife = [
+      ...gameSceneObject.marineLife,
+      (seahorse as MarineLifeI),
+    ];
+
+    const coral = Sprite.from(coralImg);
+    coral.position.set(
+      1725,
+      app.renderer.height - coral.height - gameSceneObject.toolbarContainer.height,
+    );
+    gameScene.addChild(coral);
+    (coral as MarineLifeI).vx = -2;
+    gameSceneObject.marineLife = [
+      ...gameSceneObject.marineLife,
+      (coral as MarineLifeI),
+    ];
+
+    const fishYellow = Sprite.from(fishYellowImg);
+    fishYellow.position.set(
+      3000,
+      400,
+    );
+    gameScene.addChild(fishYellow);
+    (fishYellow as MarineLifeI).vx = -3;
+    gameSceneObject.marineLife = [
+      ...gameSceneObject.marineLife,
+      (fishYellow as MarineLifeI),
+    ];
+
+    const littleTurtle = Sprite.from(littleTurtleImg);
+    littleTurtle.position.set(
+      2200,
+      160,
+    );
+    gameScene.addChild(littleTurtle);
+    (littleTurtle as MarineLifeI).vx = -2;
+    gameSceneObject.marineLife = [
+      ...gameSceneObject.marineLife,
+      (littleTurtle as MarineLifeI),
+    ];
+
+    const cheilinus = Sprite.from(cheilinusUndulatusImg);
+    cheilinus.position.set(
+      2500,
+      440,
+    );
+    gameScene.addChild(cheilinus);
+    (cheilinus as MarineLifeI).vx = -2;
+    gameSceneObject.marineLife = [
+      ...gameSceneObject.marineLife,
+      (cheilinus as MarineLifeI),
+    ];
+
+    const bolbometopon = Sprite.from(bolbometoponMuricatumImg);
+    bolbometopon.position.set(
+      2900,
+      80,
+    );
+    gameScene.addChild(bolbometopon);
+    (bolbometopon as MarineLifeI).vx = -2;
+    gameSceneObject.marineLife = [
+      ...gameSceneObject.marineLife,
+      (bolbometopon as MarineLifeI),
+    ];
   };
 
   const initKarmaScene = (): void => {
