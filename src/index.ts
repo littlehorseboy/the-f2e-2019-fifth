@@ -7,8 +7,8 @@ require('./index.css');
 const FontFaceObserver = require('fontfaceobserver');
 
 /* eslint-disable @typescript-eslint/no-var-requires */
-const plasticBagDown = require('./assets/images/F2E_week5/down.png');
-const plasticBagJump = require('./assets/images/F2E_week5/jump.png');
+const plasticBagDownImg = require('./assets/images/F2E_week5/down.png');
+const plasticBagJumpImg = require('./assets/images/F2E_week5/jump.png');
 const bgRockImgLeft = require('./assets/images/bg-rock/rock2.png');
 const bgRockImgCenter = require('./assets/images/bg-rock/rock3.png');
 const bgRockImgRight = require('./assets/images/bg-rock/rock.png');
@@ -58,6 +58,7 @@ interface GameSceneObjectI {
   bgRocks: null | PIXI.TilingSprite;
   bgLeftFishes: null | PIXI.Sprite;
   bgRightFishes: null | PIXI.Sprite;
+  toolbarRightText: null | PIXI.Text;
 }
 const gameSceneObject: GameSceneObjectI = {
   background90: null,
@@ -66,6 +67,7 @@ const gameSceneObject: GameSceneObjectI = {
   bgRocks: null,
   bgLeftFishes: null,
   bgRightFishes: null,
+  toolbarRightText: null,
 };
 let gameKarmaScene: PIXI.Container; // 業障場景
 
@@ -82,7 +84,55 @@ const karma = (): void => {
   }
 };
 
+class Countdown {
+  private internalSeconds: number;
+
+  public constructor() {
+    this.internalSeconds = 90;
+  }
+
+  public get seconds(): number {
+    return this.internalSeconds;
+  }
+
+  public setCountdownStatus(status: 'play' | 'pause' | 'stop'): void {
+    let timer: undefined | NodeJS.Timeout;
+
+    if (status === 'play') {
+      timer = setInterval((): void => {
+        if (this.internalSeconds <= 0) {
+          clearInterval(timer as NodeJS.Timeout);
+        } else {
+          this.internalSeconds -= 1;
+        }
+      }, 1000);
+    }
+
+    if (status === 'pause') {
+      if (timer) {
+        clearInterval(timer);
+      }
+    }
+
+    if (status === 'stop') {
+      if (timer) {
+        clearInterval(timer);
+      }
+      this.internalSeconds = 90;
+    }
+  }
+}
+
+const countdown = new Countdown();
+
 const play = (distance: number, delta: number): void => {
+  if (countdown.seconds <= 30) {
+    state = play.bind(undefined, 30);
+  } else if (countdown.seconds <= 60) {
+    state = play.bind(undefined, 60);
+  }
+
+
   if (gameStartScene.visible) {
     gameStartScene.visible = false;
   }
@@ -133,6 +183,10 @@ const play = (distance: number, delta: number): void => {
     if (gameSceneObject.bgRightFishes.x < 0 - gameSceneObject.bgRightFishes.width) {
       gameSceneObject.bgRightFishes.x = app.renderer.width + gameSceneObject.bgRightFishes.width;
     }
+  }
+
+  if (gameSceneObject.toolbarRightText) {
+    gameSceneObject.toolbarRightText.text = `End Distance: ${countdown.seconds} M`;
   }
 };
 
@@ -235,6 +289,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       startButtonGraphic.interactive = true;
       startButtonGraphic.buttonMode = true;
       startButtonGraphic.on('click', (): void => {
+        countdown.setCountdownStatus('play');
         state = play.bind(undefined, 90);
       });
       startButtonContainer.addChild(startButtonGraphic);
@@ -274,19 +329,14 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     };
 
     const plasticBag = (): void => {
-      const rockCenter = Sprite.from(plasticBagJump);
-      rockCenter.position.set(
-        130,
-        414,
-      );
-      gameStartScene.addChild(rockCenter);
+      const plasticBagLeft = Sprite.from(plasticBagJumpImg);
+      plasticBagLeft.position.set(130, 414);
+      gameStartScene.addChild(plasticBagLeft);
 
-      const rockRight = Sprite.from(plasticBagDown);
-      rockRight.position.set(
-        1011,
-        104,
-      );
-      gameStartScene.addChild(rockRight);
+      const plasticBagRight = Sprite.from(plasticBagDownImg);
+      plasticBagRight.rotation = -Math.PI * 0.2;
+      plasticBagRight.position.set(1011, 104);
+      gameStartScene.addChild(plasticBagRight);
     };
 
     const rocks = (): void => {
@@ -427,6 +477,62 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       return gradientBg;
     })();
 
+    const toolbarContainer = new Container();
+
+    const textStyle = createPixelMplusTextStyle(30);
+
+    // toolbar Rectangle
+    const toolbarGraphic = new Graphics();
+    toolbarGraphic.beginFill(0x151D46);
+    toolbarGraphic.lineStyle(1, 0x707070, 1);
+    toolbarGraphic.drawRect(0, 0, app.renderer.width, 80);
+    toolbarGraphic.endFill();
+    toolbarContainer.addChild(toolbarGraphic);
+
+    // toolbar 左邊文字
+    const toolbarLeftText = new Text('Control:', textStyle);
+    toolbarLeftText.position.set(
+      38,
+      toolbarGraphic.height / 2 - toolbarLeftText.height / 2,
+    );
+    toolbarContainer.addChild(toolbarLeftText);
+
+    // toolbar 左邊文字 + 框框
+    const toolbarLeftButtonGraphic = new Graphics();
+    toolbarLeftButtonGraphic.lineStyle(3, 0xFFFFFF, 1);
+    toolbarLeftButtonGraphic.drawRect(0, 0, 113, 41);
+    toolbarLeftButtonGraphic.endFill();
+    toolbarLeftButtonGraphic.position.set(
+      175,
+      toolbarGraphic.height / 2 - toolbarLeftButtonGraphic.height / 2,
+    );
+    toolbarContainer.addChild(toolbarLeftButtonGraphic);
+
+    const toolbarLeftButtonText = new Text('space', textStyle);
+    toolbarLeftButtonText.position.set(
+      toolbarLeftButtonGraphic.x
+        + (toolbarLeftButtonGraphic.width / 2)
+        - (toolbarLeftButtonText.width / 2),
+      toolbarGraphic.height / 2 - toolbarLeftButtonText.height / 2,
+    );
+    toolbarContainer.addChild(toolbarLeftButtonText);
+
+    // toolbar 右邊文字
+    gameSceneObject.toolbarRightText = new Text('End Distance: 90 M', textStyle);
+    gameSceneObject.toolbarRightText.position.set(
+      930,
+      toolbarGraphic.height / 2 - gameSceneObject.toolbarRightText.height / 2,
+    );
+    toolbarContainer.addChild(gameSceneObject.toolbarRightText);
+
+    // toolbarContainer 填完內容後最後定位
+    toolbarContainer.position.set(
+      0,
+      app.renderer.height - toolbarGraphic.height,
+    );
+
+    gameScene.addChild(toolbarContainer);
+
     // 背景岩石群
     const rocksTexture = Texture.from(bgRocksImg);
     gameSceneObject.bgRocks = new TilingSprite(
@@ -436,7 +542,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     );
     gameSceneObject.bgRocks.position.set(
       0,
-      app.renderer.height - gameSceneObject.bgRocks.height,
+      app.renderer.height - gameSceneObject.bgRocks.height - toolbarContainer.height,
     );
     gameScene.addChild(gameSceneObject.bgRocks);
 
@@ -449,6 +555,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     gameSceneObject.bgRightFishes = Sprite.from(bgFishesImg);
     gameSceneObject.bgRightFishes.position.set(640, 80);
     gameScene.addChild(gameSceneObject.bgRightFishes);
+
   };
 
   const initKarmaScene = (): void => {
@@ -550,7 +657,10 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   initGameScene();
   initKarmaScene();
 
-  state = play.bind(undefined, 90);
+  state = start;
+
+  // countdown.setCountdownStatus('play');
+  // state = play.bind(undefined, 90);
 
   app.ticker.add((delta: number): void => gameLoop(delta));
 };
@@ -563,8 +673,8 @@ const loadProgressHandler = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResou
 
 const init = (): void => {
   new Loader()
-    .add('plasticBagDown', plasticBagDown)
-    .add('plasticBagJump', plasticBagJump)
+    .add('plasticBagDownImg', plasticBagDownImg)
+    .add('plasticBagJumpImg', plasticBagJumpImg)
     .add('bgRockImgLeft', bgRockImgLeft)
     .add('bgRockImgCenter', bgRockImgCenter)
     .add('bgRockImgRight', bgRockImgRight)
