@@ -65,6 +65,8 @@ interface GameSceneObjectI {
   toolbarRightText: null | PIXI.Text;
   plasticBag: null | PlasticBag;
   toolbarContainer: null | PIXI.Container;
+  toolbarLevelTwoGraphic: null | PIXI.Graphics;
+  toolbarLevelThreeGraphic: null | PIXI.Graphics;
 }
 const gameSceneObject: GameSceneObjectI = {
   background90: null,
@@ -76,6 +78,8 @@ const gameSceneObject: GameSceneObjectI = {
   toolbarRightText: null,
   plasticBag: null,
   toolbarContainer: null,
+  toolbarLevelTwoGraphic: null,
+  toolbarLevelThreeGraphic: null,
 };
 let gameKarmaScene: PIXI.Container; // 業障場景
 
@@ -136,8 +140,14 @@ const countdown = new Countdown();
 const play = (distance: number, delta: number): void => {
   if (countdown.seconds <= 30) {
     state = play.bind(undefined, 30);
+    if (gameSceneObject.toolbarLevelThreeGraphic) {
+      gameSceneObject.toolbarLevelThreeGraphic.visible = true;
+    }
   } else if (countdown.seconds <= 60) {
     state = play.bind(undefined, 60);
+    if (gameSceneObject.toolbarLevelTwoGraphic) {
+      gameSceneObject.toolbarLevelTwoGraphic.visible = true;
+    }
   }
 
   if (gameStartScene.visible) {
@@ -166,6 +176,13 @@ const play = (distance: number, delta: number): void => {
   }
 
   if (gameSceneObject.bgRocks) {
+    if (gameSceneObject.toolbarContainer) {
+      gameSceneObject.bgRocks.position.set(
+        0,
+        app.renderer.height - gameSceneObject.bgRocks.height
+          - gameSceneObject.toolbarContainer.height,
+      );
+    }
     gameSceneObject.bgRocks.tilePosition.set(
       gameSceneObject.bgRocks.tilePosition.x - 0.5,
       gameSceneObject.bgRocks.tilePosition.y,
@@ -211,7 +228,10 @@ const play = (distance: number, delta: number): void => {
             - gameSceneObject.plasticBag.height
             - gameSceneObject.toolbarContainer.height
       ) {
-        gameSceneObject.plasticBag.y += 0;
+        gameSceneObject.plasticBag.y = app.renderer.height
+          - gameSceneObject.plasticBag.height
+          - gameSceneObject.toolbarContainer.height;
+        gameSceneObject.plasticBag.y += gameSceneObject.plasticBag.vy;
       } else if (gameSceneObject.plasticBag.vy > 0) {
         gameSceneObject.plasticBag.y += gameSceneObject.plasticBag.vy;
       }
@@ -554,6 +574,26 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     );
     toolbarContainer.addChild(gameSceneObject.toolbarRightText);
 
+    // toolbarLevelTwo Rectangle
+    const toolbarLevelTwoGraphic = new Graphics();
+    toolbarLevelTwoGraphic.visible = false;
+    toolbarLevelTwoGraphic.beginFill(0x151D46);
+    toolbarLevelTwoGraphic.lineStyle(1, 0x707070, 1);
+    toolbarLevelTwoGraphic.drawRect(0, -80, app.renderer.width, 80);
+    toolbarLevelTwoGraphic.endFill();
+    toolbarContainer.addChild(toolbarLevelTwoGraphic);
+    gameSceneObject.toolbarLevelTwoGraphic = toolbarLevelTwoGraphic;
+
+    // toolbarLevelThree Rectangle
+    const toolbarLevelThreeGraphic = new Graphics();
+    toolbarLevelThreeGraphic.visible = false;
+    toolbarLevelThreeGraphic.beginFill(0x151D46);
+    toolbarLevelThreeGraphic.lineStyle(1, 0x707070, 1);
+    toolbarLevelThreeGraphic.drawRect(0, -160, app.renderer.width, 80);
+    toolbarLevelThreeGraphic.endFill();
+    toolbarContainer.addChild(toolbarLevelThreeGraphic);
+    gameSceneObject.toolbarLevelThreeGraphic = toolbarLevelThreeGraphic;
+
     // toolbarContainer 填完內容後最後定位
     toolbarContainer.position.set(
       0,
@@ -570,10 +610,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       rocksTexture.baseTexture.width,
       rocksTexture.baseTexture.height,
     );
-    gameSceneObject.bgRocks.position.set(
-      0,
-      app.renderer.height - gameSceneObject.bgRocks.height - toolbarContainer.height,
-    );
+
     gameScene.addChild(gameSceneObject.bgRocks);
 
     // 背景魚群 (左)
