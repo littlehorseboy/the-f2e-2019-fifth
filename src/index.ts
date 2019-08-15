@@ -53,7 +53,7 @@ let state: (delta: number, distance?: number) => void; // 遊戲場景狀態
 let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
 interface PlasticBag extends PIXI.Sprite {
-  vy?: number;
+  vy: number;
 }
 interface GameSceneObjectI {
   background90: null | PIXI.Sprite;
@@ -64,6 +64,7 @@ interface GameSceneObjectI {
   bgRightFishes: null | PIXI.Sprite;
   toolbarRightText: null | PIXI.Text;
   plasticBag: null | PlasticBag;
+  toolbarContainer: null | PIXI.Container;
 }
 const gameSceneObject: GameSceneObjectI = {
   background90: null,
@@ -74,6 +75,7 @@ const gameSceneObject: GameSceneObjectI = {
   bgRightFishes: null,
   toolbarRightText: null,
   plasticBag: null,
+  toolbarContainer: null,
 };
 let gameKarmaScene: PIXI.Container; // 業障場景
 
@@ -195,17 +197,24 @@ const play = (distance: number, delta: number): void => {
   }
 
   if (gameSceneObject.plasticBag) {
-    if (gameSceneObject.plasticBag.vy) {
-      gameSceneObject.plasticBag.y -= gameSceneObject.plasticBag.vy;
+    // 按空白時 向上移動
+    // y 不能小於 0，且 vy 加速度是負數
+    if (gameSceneObject.plasticBag.y > 0 && gameSceneObject.plasticBag.vy < 0) {
+      gameSceneObject.plasticBag.y += gameSceneObject.plasticBag.vy;
     }
 
-    if (
-      gameSceneObject.plasticBag.y
-        > app.renderer.height - gameSceneObject.plasticBag.height
-    ) {
-      gameSceneObject.plasticBag.y += 0;
-    } else {
-      gameSceneObject.plasticBag.y += 1;
+    // 自動下墜
+    if (gameSceneObject.toolbarContainer) {
+      if (
+        gameSceneObject.plasticBag.y
+          > app.renderer.height
+            - gameSceneObject.plasticBag.height
+            - gameSceneObject.toolbarContainer.height
+      ) {
+        gameSceneObject.plasticBag.y += 0;
+      } else if (gameSceneObject.plasticBag.vy > 0) {
+        gameSceneObject.plasticBag.y += gameSceneObject.plasticBag.vy;
+      }
     }
   }
 };
@@ -552,6 +561,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     );
 
     gameScene.addChild(toolbarContainer);
+    gameSceneObject.toolbarContainer = toolbarContainer;
 
     // 背景岩石群
     const rocksTexture = Texture.from(bgRocksImg);
@@ -587,7 +597,8 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
 
     const plasticBagJumpTexture = Texture.from(plasticBagJumpImg);
 
-    gameSceneObject.plasticBag = plasticBag;
+    (plasticBag as PlasticBag).vy = 3; // 預設的下降速度
+    gameSceneObject.plasticBag = plasticBag as PlasticBag;
 
     // 鍵盤控制萬惡的塑膠袋
     const space = keyboard(32);
@@ -595,14 +606,14 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     space.press = (): void => {
       if (gameSceneObject.plasticBag) {
         gameSceneObject.plasticBag.texture = plasticBagJumpTexture;
-        gameSceneObject.plasticBag.vy = 5;
+        gameSceneObject.plasticBag.vy = -5;
       }
     };
 
     space.release = (): void => {
       if (gameSceneObject.plasticBag) {
         gameSceneObject.plasticBag.texture = plasticBagDownTexture;
-        gameSceneObject.plasticBag.vy = 0;
+        gameSceneObject.plasticBag.vy = 3; // 預設的下降速度
       }
     };
   };
