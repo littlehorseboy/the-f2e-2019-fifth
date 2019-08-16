@@ -62,8 +62,6 @@ interface MarineLifeI extends PIXI.Sprite {
   vx: number;
 }
 interface GameSceneObjectI {
-  bgRightFishes: null | PIXI.Sprite;
-  toolbarRightText: null | PIXI.Text;
   plasticBag: null | PlasticBagI;
   toolbarContainer: null | PIXI.Container;
   toolbarLevelTwoGraphic: null | PIXI.Graphics;
@@ -71,8 +69,6 @@ interface GameSceneObjectI {
   marineLife: MarineLifeI[];
 }
 const gameSceneObject: GameSceneObjectI = {
-  bgRightFishes: null,
-  toolbarRightText: null,
   plasticBag: null,
   toolbarContainer: null,
   toolbarLevelTwoGraphic: null,
@@ -237,8 +233,11 @@ const play = (distance: number, delta: number): void => {
     }
   }
 
-  if (gameSceneObject.toolbarRightText) {
-    gameSceneObject.toolbarRightText.text = `End Distance: ${countdown.seconds} M`;
+  const toolbarRightText = state.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'toolbarRightText');
+
+  if (toolbarRightText) {
+    (toolbarRightText.displayObject as PIXI.Text).text = `End Distance: ${countdown.seconds} M`;
   }
 
   if (gameSceneObject.plasticBag) {
@@ -620,13 +619,19 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     );
     toolbarContainer.addChild(toolbarLeftButtonText);
 
-    // toolbar 右邊文字
-    gameSceneObject.toolbarRightText = new Text('End Distance: 90 M', textStyle);
-    gameSceneObject.toolbarRightText.position.set(
+    // toolbar 右下角文字
+    const toolbarRightText = new Text('End Distance: 90 M', textStyle);
+    toolbarRightText.position.set(
       930,
-      toolbarGraphic.height / 2 - gameSceneObject.toolbarRightText.height / 2,
+      toolbarGraphic.height / 2 - toolbarRightText.height / 2,
     );
-    toolbarContainer.addChild(gameSceneObject.toolbarRightText);
+    toolbarContainer.addChild(toolbarRightText);
+
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'toolbarRightText',
+      description: '右下角文字',
+      displayObject: toolbarRightText,
+    }));
 
     // toolbarLevelTwo Rectangle
     const toolbarLevelTwoGraphic = new Graphics();
