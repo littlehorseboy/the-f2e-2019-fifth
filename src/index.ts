@@ -144,7 +144,7 @@ document.addEventListener('visibilitychange', (): void => {
 });
 
 const play = (distance: number, delta: number): void => {
-  const reduxState = store.getState();
+  const state = store.getState();
 
   if (gameStartScene.visible) {
     gameStartScene.visible = false;
@@ -159,11 +159,11 @@ const play = (distance: number, delta: number): void => {
     sceneState = play.bind(undefined, 60);
   }
 
-  const background90 = reduxState.sceneObjectReducer.gameScene
+  const background90 = state.sceneObjectReducer.gameScene
     .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'background90');
-  const background60 = reduxState.sceneObjectReducer.gameScene
+  const background60 = state.sceneObjectReducer.gameScene
     .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'background60');
-  const background30 = reduxState.sceneObjectReducer.gameScene
+  const background30 = state.sceneObjectReducer.gameScene
     .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'background30');
 
   if (
@@ -194,7 +194,7 @@ const play = (distance: number, delta: number): void => {
     }
   }
 
-  const bgRocks = reduxState.sceneObjectReducer.gameScene
+  const bgRocks = state.sceneObjectReducer.gameScene
     .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'bgRocks');
 
   if (bgRocks) {
@@ -211,7 +211,7 @@ const play = (distance: number, delta: number): void => {
     );
   }
 
-  const bgLeftFishes = reduxState.sceneObjectReducer.gameScene
+  const bgLeftFishes = state.sceneObjectReducer.gameScene
     .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'bgLeftFishes');
 
   if (bgLeftFishes) {
