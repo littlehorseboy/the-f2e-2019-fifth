@@ -1,4 +1,4 @@
-import { sceneObjectActionTypes, ADDSCENEOBJECT } from '../../actions/sceneObject/sceneObject';
+import { sceneObjectActionTypes, ADDSCENEOBJECT, REMOVEALLSCENEOBJECT } from '../../actions/sceneObject/sceneObject';
 
 export interface WithPIXIDisplayObject {
   id: string;
@@ -29,6 +29,11 @@ const reducer = (state = initState, action: sceneObjectActionTypes): SceneObject
           ...state[action.payload.sceneTarget],
           action.payload.displayObject,
         ],
+      };
+    case REMOVEALLSCENEOBJECT:
+      return {
+        ...state,
+        [action.payload.sceneTarget]: [],
       };
     default:
       return state;

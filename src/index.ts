@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js';
 import uuidv4 from 'uuid/v4';
 import keyboard from './assets/js/keyboard';
 import store from './reducers/configureStore';
-import { addSceneObject } from './actions/sceneObject/sceneObject';
+import { addSceneObject, removeAllSceneObject } from './actions/sceneObject/sceneObject';
 import { WithPIXIDisplayObject } from './reducers/sceneObject/sceneObject';
 import hitTestRectangle from './assets/js/hitTestReactangle';
 
@@ -57,30 +57,36 @@ document.body.appendChild(app.view);
 let sceneState: (delta: number, distance?: number) => void; // 遊戲場景狀態
 let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
-interface MarineLifeI extends PIXI.Sprite {
-  vx: number;
-}
-interface GameSceneObjectI {
-  marineLife: MarineLifeI[];
-}
-const gameSceneObject: GameSceneObjectI = {
-  marineLife: [],
-};
 const swimmingMarineLifeIds: string[] = [];
 let gameKarmaScene: PIXI.Container; // 業障場景
 
-const end = (): void => {
+// 創造由上而下的漸層背景
+const createGradTexture = (firstStopColor: string, secondStopColor: string): PIXI.Texture => {
+  const quality = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = quality;
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
+  const grd = ctx.createLinearGradient(0, 0, 0, quality);
+  grd.addColorStop(0, firstStopColor);
+  grd.addColorStop(1, secondStopColor);
+
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, 1, quality);
+
+  return Texture.from(canvas);
 };
 
-const karma = (): void => {
-  if (gameStartScene.visible) {
-    gameStartScene.visible = false;
-  }
-  if (!gameKarmaScene.visible) {
-    gameKarmaScene.visible = true;
-  }
-};
+// 創造 PixelMplus 文字
+const createPixelMplusTextStyle = (
+  fontSize: number,
+  fill?: string,
+): PIXI.TextStyle => new TextStyle({
+  fontFamily: 'regularPixelMplus10',
+  fontSize,
+  fill: fill ? `${fill}` : '#FFFFFF',
+});
 
 class Countdown {
   private internalSeconds: number;
@@ -131,7 +137,523 @@ document.addEventListener('visibilitychange', (): void => {
   }
 });
 
-const play = (distance: number, delta: number): void => {
+const initGameScene = (): void => {
+  // global gameScene 遊戲區
+  gameScene = new Container();
+  gameScene.visible = false;
+  app.stage.addChild(gameScene);
+
+  const background90 = ((): PIXI.Sprite => {
+    // 背景 90M
+    const gradTexture = createGradTexture('#63CFE5', '#76A6E0');
+    const gradientBg = new Sprite(gradTexture);
+    gradientBg.width = 1280;
+    gradientBg.height = 800;
+
+    gameScene.addChild(gradientBg);
+
+    return gradientBg;
+  })();
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'background90',
+    description: '距離終點 90 M 的漸層背景',
+    displayObject: background90,
+  }));
+
+  const background60 = ((): PIXI.Sprite => {
+    // 背景 60M
+    const gradTexture = createGradTexture('#ACDBE5', '#B3C7E0');
+    const gradientBg = new Sprite(gradTexture);
+    gradientBg.width = 1280;
+    gradientBg.height = 800;
+
+    gameScene.addChild(gradientBg);
+
+    return gradientBg;
+  })();
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'background60',
+    description: '距離終點 60 M 的漸層背景',
+    displayObject: background60,
+  }));
+
+  const background30 = ((): PIXI.Sprite => {
+    // 背景 30M
+    const gradTexture = createGradTexture('#CEE1E5', '#CAD4E0');
+    const gradientBg = new Sprite(gradTexture);
+    gradientBg.width = 1280;
+    gradientBg.height = 800;
+
+    gameScene.addChild(gradientBg);
+
+    return gradientBg;
+  })();
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'background30',
+    description: '距離終點 30 M 的漸層背景',
+    displayObject: background30,
+  }));
+
+  const toolbarContainer = new Container();
+
+  const textStyle = createPixelMplusTextStyle(30);
+
+  // toolbar Rectangle
+  const toolbarGraphic = new Graphics();
+  toolbarGraphic.beginFill(0x151D46);
+  toolbarGraphic.lineStyle(1, 0x707070, 1);
+  toolbarGraphic.drawRect(0, 0, app.renderer.width, 80);
+  toolbarGraphic.endFill();
+  toolbarContainer.addChild(toolbarGraphic);
+
+  // toolbar 左邊文字
+  const toolbarLeftText = new Text('Control:', textStyle);
+  toolbarLeftText.position.set(
+    38,
+    toolbarGraphic.height / 2 - toolbarLeftText.height / 2,
+  );
+  toolbarContainer.addChild(toolbarLeftText);
+
+  // toolbar 左邊文字 + 框框
+  const toolbarLeftButtonGraphic = new Graphics();
+  toolbarLeftButtonGraphic.lineStyle(3, 0xFFFFFF, 1);
+  toolbarLeftButtonGraphic.drawRect(0, 0, 113, 41);
+  toolbarLeftButtonGraphic.endFill();
+  toolbarLeftButtonGraphic.position.set(
+    175,
+    toolbarGraphic.height / 2 - toolbarLeftButtonGraphic.height / 2,
+  );
+  toolbarContainer.addChild(toolbarLeftButtonGraphic);
+
+  const toolbarLeftButtonText = new Text('space', textStyle);
+  toolbarLeftButtonText.position.set(
+    toolbarLeftButtonGraphic.x
+    + (toolbarLeftButtonGraphic.width / 2)
+    - (toolbarLeftButtonText.width / 2),
+    toolbarGraphic.height / 2 - toolbarLeftButtonText.height / 2,
+  );
+  toolbarContainer.addChild(toolbarLeftButtonText);
+
+  // toolbar 右下角文字
+  const toolbarRightText = new Text('End Distance: 90 M', textStyle);
+  toolbarRightText.position.set(
+    930,
+    toolbarGraphic.height / 2 - toolbarRightText.height / 2,
+  );
+  toolbarContainer.addChild(toolbarRightText);
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'toolbarRightText',
+    description: '右下角文字',
+    displayObject: toolbarRightText,
+  }));
+
+  // toolbarLevelTwo Rectangle
+  const toolbarLevelTwoGraphic = new Graphics();
+  toolbarLevelTwoGraphic.visible = false;
+  toolbarLevelTwoGraphic.beginFill(0x151D46);
+  toolbarLevelTwoGraphic.lineStyle(1, 0x707070, 1);
+  toolbarLevelTwoGraphic.drawRect(0, -80, app.renderer.width, 80);
+  toolbarLevelTwoGraphic.endFill();
+  toolbarContainer.addChild(toolbarLevelTwoGraphic);
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'toolbarLevelTwoGraphic',
+    description: 'toolbarLevelTwo Rectangle',
+    displayObject: toolbarLevelTwoGraphic,
+  }));
+
+  // toolbarLevelThree Rectangle
+  const toolbarLevelThreeGraphic = new Graphics();
+  toolbarLevelThreeGraphic.visible = false;
+  toolbarLevelThreeGraphic.beginFill(0x151D46);
+  toolbarLevelThreeGraphic.lineStyle(1, 0x707070, 1);
+  toolbarLevelThreeGraphic.drawRect(0, -160, app.renderer.width, 80);
+  toolbarLevelThreeGraphic.endFill();
+  toolbarContainer.addChild(toolbarLevelThreeGraphic);
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'toolbarLevelThreeGraphic',
+    description: 'toolbarLevelTwo Rectangle',
+    displayObject: toolbarLevelThreeGraphic,
+  }));
+
+  // toolbarContainer 填完內容後最後定位
+  toolbarContainer.position.set(
+    0,
+    app.renderer.height - toolbarGraphic.height,
+  );
+
+  gameScene.addChild(toolbarContainer);
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'toolbarContainer',
+    description: 'toolbar container',
+    displayObject: toolbarContainer,
+  }));
+
+  // 背景岩石群
+  const rocksTexture = Texture.from(bgRocksImg);
+  const bgRocks = new TilingSprite(
+    rocksTexture,
+    rocksTexture.baseTexture.width,
+    rocksTexture.baseTexture.height,
+  );
+  gameScene.addChild(bgRocks);
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'bgRocks',
+    description: '背景岩石群',
+    displayObject: bgRocks,
+  }));
+
+  // 背景魚群 (左)
+  const bgLeftFishes = Sprite.from(bgFishesImg);
+  bgLeftFishes.position.set(209, 251);
+  gameScene.addChild(bgLeftFishes);
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'bgLeftFishes',
+    description: '背景魚群 (左)',
+    displayObject: bgLeftFishes,
+  }));
+
+  // 背景魚群 (右)
+  const bgRightFishes = Sprite.from(bgFishesImg);
+  bgRightFishes.position.set(640, 80);
+  gameScene.addChild(bgRightFishes);
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'bgRightFishes',
+    description: '背景魚群 (右)',
+    displayObject: bgRightFishes,
+  }));
+
+  // 萬惡的塑膠袋
+  const plasticBagDownTexture = Texture.from(plasticBagDownImg); // 下降的樣子
+  const plasticBagJumpTexture = Texture.from(plasticBagJumpImg); // 向上跳的樣子
+  const plasticBagSprite = Sprite.from(plasticBagDownTexture);
+  plasticBagSprite.position.set(
+    120,
+    app.renderer.height / 2 - plasticBagSprite.height / 2,
+  );
+  gameScene.addChild(plasticBagSprite);
+
+  store.dispatch(addSceneObject('gameScene', {
+    id: 'plasticBag',
+    description: '萬惡的塑膠袋',
+    displayObject: plasticBagSprite,
+    vy: 3, // 預設的下降速度
+  }));
+
+
+  // 鍵盤控制萬惡的塑膠袋
+  const space = keyboard(32);
+
+  space.press = (): void => {
+    const state = store.getState();
+    const plasticBag = state.sceneObjectReducer.gameScene
+      .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'plasticBag');
+    if (plasticBag) {
+      (plasticBag.displayObject as PIXI.Sprite).texture = plasticBagJumpTexture;
+      plasticBag.vy = -5; // 按下空白的上升速度
+    }
+  };
+
+  space.release = (): void => {
+    const state = store.getState();
+    const plasticBag = state.sceneObjectReducer.gameScene
+      .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'plasticBag');
+    if (plasticBag) {
+      (plasticBag.displayObject as PIXI.Sprite).texture = plasticBagDownTexture;
+      plasticBag.vy = 3; // 預設的下降速度
+    }
+  };
+
+  // 會一直游過來的海洋生物們
+  ((): void => {
+    const coralReef = Sprite.from(coralReefImg);
+    coralReef.position.set(
+      1025,
+      app.renderer.height - coralReef.height - toolbarContainer.height,
+    );
+    gameScene.addChild(coralReef);
+
+    const id = `coralReef-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '珊瑚礁',
+      displayObject: coralReef,
+      vx: -2,
+    }));
+  })();
+
+  ((): void => {
+    const turtle = Sprite.from(turtleImg);
+    turtle.position.set(
+      1300,
+      37,
+    );
+    gameScene.addChild(turtle);
+
+    const id = `turtle-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '大海龜',
+      displayObject: turtle,
+      vx: -2,
+    }));
+  })();
+
+  ((): void => {
+    const seahorse = Sprite.from(seahorseImg);
+    seahorse.position.set(
+      1480,
+      500,
+    );
+    gameScene.addChild(seahorse);
+
+    const id = `seahorse-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '海馬',
+      displayObject: seahorse,
+      vx: -2,
+    }));
+  })();
+
+  ((): void => {
+    const coral = Sprite.from(coralImg);
+    coral.position.set(
+      1725,
+      app.renderer.height - coral.height - toolbarContainer.height,
+    );
+    gameScene.addChild(coral);
+
+    const id = `coral-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '珊瑚',
+      displayObject: coral,
+      vx: -2,
+    }));
+  })();
+
+  ((): void => {
+    const fishYellow = Sprite.from(fishYellowImg);
+    fishYellow.position.set(
+      3000,
+      400,
+    );
+    gameScene.addChild(fishYellow);
+
+    const id = `fishYellow-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '黃色小魚',
+      displayObject: fishYellow,
+      vx: -3,
+    }));
+  })();
+
+  ((): void => {
+    const littleTurtle = Sprite.from(littleTurtleImg);
+    littleTurtle.position.set(
+      2200,
+      160,
+    );
+    gameScene.addChild(littleTurtle);
+
+    const id = `littleTurtle-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '小海龜',
+      displayObject: littleTurtle,
+      vx: -2,
+    }));
+  })();
+
+  ((): void => {
+    const cheilinus = Sprite.from(cheilinusUndulatusImg);
+    cheilinus.position.set(
+      2500,
+      440,
+    );
+    gameScene.addChild(cheilinus);
+
+    const id = `cheilinus-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '龍王鯛',
+      displayObject: cheilinus,
+      vx: -2,
+    }));
+  })();
+
+  ((): void => {
+    const bolbometopon = Sprite.from(bolbometoponMuricatumImg);
+    bolbometopon.position.set(
+      2900,
+      80,
+    );
+    gameScene.addChild(bolbometopon);
+
+    const id = `bolbometopon-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '龍頭鸚哥魚',
+      displayObject: bolbometopon,
+      vx: -2,
+    }));
+  })();
+
+  ((): void => {
+    const anemone = Sprite.from(anemoneImg);
+    anemone.position.set(
+      3100,
+      app.renderer.height - anemone.height - toolbarContainer.height,
+    );
+    gameScene.addChild(anemone);
+
+    const id = `anemone-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '海葵',
+      displayObject: anemone,
+      vx: -2,
+    }));
+  })();
+
+  ((): void => {
+    const anemones = Sprite.from(anemonesImg);
+    anemones.position.set(
+      3100,
+      app.renderer.height - anemones.height - toolbarContainer.height,
+    );
+    gameScene.addChild(anemones);
+
+    const id = `anemones-${uuidv4()}`;
+    swimmingMarineLifeIds.push(id);
+    store.dispatch(addSceneObject('gameScene', {
+      id,
+      description: '海葵',
+      displayObject: anemones,
+      vx: -2,
+    }));
+  })();
+
+  // 碰撞畫面
+  const overlapBackground = new Graphics();
+  // overlapBackground.visible = false;
+  overlapBackground.alpha = 0.5;
+  overlapBackground.beginFill(0x3E3E3E);
+  overlapBackground.drawRect(0, 0, app.renderer.width, app.renderer.height);
+  overlapBackground.endFill();
+  gameScene.addChild(overlapBackground);
+
+  // 小視窗 Container
+  const dialogContainer = new Container();
+
+  // 小視窗
+  const dialog = new Graphics();
+  dialog.alpha = 0.8;
+  dialog.beginFill(0x000000);
+  dialog.lineStyle(1, 0x707070, 1);
+  dialog.drawRect(0, 0, 700, 400);
+  dialog.endFill();
+  dialogContainer.addChild(dialog);
+
+  const dialogTitle = new Text('殺死海龜了!', createPixelMplusTextStyle(60, '#FF5555'));
+  dialogTitle.position.set(
+    dialog.width / 2 - dialogTitle.width / 2,
+    54,
+  );
+  dialogContainer.addChild(dialogTitle);
+
+  const dialogSubTitle = new Text('海龜會吃水母的', new TextStyle({
+    fontFamily: 'regularPixelMplus10',
+    fontSize: 40,
+    fill: '#FFFFFF',
+  }));
+  dialogSubTitle.position.set(
+    dialog.width / 2 - dialogSubTitle.width / 2,
+    143,
+  );
+  dialogContainer.addChild(dialogSubTitle);
+
+  // AgainButtonContainer
+  const AgainButtonContainer = new Container();
+
+  // 按鈕 Rectangle
+  const AgainButtonGraphic = new Graphics();
+  AgainButtonGraphic.lineStyle(5, 0xFFFFFF, 1);
+  AgainButtonGraphic.drawRect(0, 0, 200, 80);
+  AgainButtonGraphic.endFill();
+  AgainButtonGraphic.hitArea = new Rectangle(0, 0, 240, 80);
+  AgainButtonGraphic.interactive = true;
+  AgainButtonGraphic.buttonMode = true;
+  AgainButtonGraphic.on('click', (): void => {
+    gameScene.parent.removeChild(gameScene);
+    store.dispatch(removeAllSceneObject('gameScene'));
+    countdown.setCountdownStatus('stop');
+    countdown.setCountdownStatus('play');
+    initGameScene();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    sceneState = play.bind(undefined, 90);
+  });
+  AgainButtonContainer.addChild(AgainButtonGraphic);
+
+  // 按鈕文字
+  const AgainButtonText = new Text('Again', createPixelMplusTextStyle(56));
+  AgainButtonText.position.set(
+    AgainButtonGraphic.width / 2 - AgainButtonText.width / 2,
+    AgainButtonGraphic.height / 2 - AgainButtonText.height / 2,
+  );
+  AgainButtonContainer.addChild(AgainButtonText);
+
+  // AgainButtonContainer 填完內容後最後定位
+  AgainButtonContainer.position.set(
+    dialog.width / 2 - AgainButtonContainer.width / 2,
+    242,
+  );
+
+  dialogContainer.addChild(AgainButtonContainer);
+
+  // dialogContainer 填完內容後最後定位
+  dialogContainer.position.set(
+    app.renderer.width / 2 - dialogContainer.width / 2,
+    200,
+  );
+
+  gameScene.addChild(dialogContainer);
+};
+
+const end = (): void => {
+
+};
+
+const karma = (): void => {
+  if (gameStartScene.visible) {
+    gameStartScene.visible = false;
+  }
+  if (!gameKarmaScene.visible) {
+    gameKarmaScene.visible = true;
+  }
+};
+
+function play(distance: number, delta: number): void {
   const state = store.getState();
 
   if (gameStartScene.visible) {
@@ -280,19 +802,20 @@ const play = (distance: number, delta: number): void => {
         });
       }
 
+      // 萬惡塑膠袋與游泳海洋生物發生碰撞
       if (
         plasticBag && hitTestRectangle(
           (marineLife.displayObject as PIXI.Sprite),
           (plasticBag.displayObject as PIXI.Sprite),
-          -25,
-          -25,
+          -50,
+          -50,
         )
       ) {
         sceneState = end;
       }
     }
   });
-};
+}
 
 const start = (): void => {
   if (!gameStartScene.visible) {
@@ -306,34 +829,6 @@ const start = (): void => {
 const gameLoop = (delta: number): void => {
   sceneState(delta);
 };
-
-// 創造由上而下的漸層背景
-const createGradTexture = (firstStopColor: string, secondStopColor: string): PIXI.Texture => {
-  const quality = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = 1;
-  canvas.height = quality;
-  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-
-  const grd = ctx.createLinearGradient(0, 0, 0, quality);
-  grd.addColorStop(0, firstStopColor);
-  grd.addColorStop(1, secondStopColor);
-
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, 1, quality);
-
-  return Texture.from(canvas);
-};
-
-// 創造 PixelMplus 文字
-const createPixelMplusTextStyle = (
-  fontSize: number,
-  fill?: string,
-): PIXI.TextStyle => new TextStyle({
-  fontFamily: 'regularPixelMplus10',
-  fontSize,
-  fill: fill ? `${fill}` : '#FFFFFF',
-});
 
 const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => {
   // global gameStartScene 遊戲開始畫面場景
@@ -537,388 +1032,6 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     plasticBag();
     rocks();
     toolbar();
-  };
-
-  const initGameScene = (): void => {
-    // global gameScene 遊戲區
-    gameScene = new Container();
-    gameScene.visible = false;
-    app.stage.addChild(gameScene);
-
-    const background90 = ((): PIXI.Sprite => {
-      // 背景 90M
-      const gradTexture = createGradTexture('#63CFE5', '#76A6E0');
-      const gradientBg = new Sprite(gradTexture);
-      gradientBg.width = 1280;
-      gradientBg.height = 800;
-
-      gameScene.addChild(gradientBg);
-
-      return gradientBg;
-    })();
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'background90',
-      description: '距離終點 90 M 的漸層背景',
-      displayObject: background90,
-    }));
-
-    const background60 = ((): PIXI.Sprite => {
-      // 背景 60M
-      const gradTexture = createGradTexture('#ACDBE5', '#B3C7E0');
-      const gradientBg = new Sprite(gradTexture);
-      gradientBg.width = 1280;
-      gradientBg.height = 800;
-
-      gameScene.addChild(gradientBg);
-
-      return gradientBg;
-    })();
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'background60',
-      description: '距離終點 60 M 的漸層背景',
-      displayObject: background60,
-    }));
-
-    const background30 = ((): PIXI.Sprite => {
-      // 背景 30M
-      const gradTexture = createGradTexture('#CEE1E5', '#CAD4E0');
-      const gradientBg = new Sprite(gradTexture);
-      gradientBg.width = 1280;
-      gradientBg.height = 800;
-
-      gameScene.addChild(gradientBg);
-
-      return gradientBg;
-    })();
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'background30',
-      description: '距離終點 30 M 的漸層背景',
-      displayObject: background30,
-    }));
-
-    const toolbarContainer = new Container();
-
-    const textStyle = createPixelMplusTextStyle(30);
-
-    // toolbar Rectangle
-    const toolbarGraphic = new Graphics();
-    toolbarGraphic.beginFill(0x151D46);
-    toolbarGraphic.lineStyle(1, 0x707070, 1);
-    toolbarGraphic.drawRect(0, 0, app.renderer.width, 80);
-    toolbarGraphic.endFill();
-    toolbarContainer.addChild(toolbarGraphic);
-
-    // toolbar 左邊文字
-    const toolbarLeftText = new Text('Control:', textStyle);
-    toolbarLeftText.position.set(
-      38,
-      toolbarGraphic.height / 2 - toolbarLeftText.height / 2,
-    );
-    toolbarContainer.addChild(toolbarLeftText);
-
-    // toolbar 左邊文字 + 框框
-    const toolbarLeftButtonGraphic = new Graphics();
-    toolbarLeftButtonGraphic.lineStyle(3, 0xFFFFFF, 1);
-    toolbarLeftButtonGraphic.drawRect(0, 0, 113, 41);
-    toolbarLeftButtonGraphic.endFill();
-    toolbarLeftButtonGraphic.position.set(
-      175,
-      toolbarGraphic.height / 2 - toolbarLeftButtonGraphic.height / 2,
-    );
-    toolbarContainer.addChild(toolbarLeftButtonGraphic);
-
-    const toolbarLeftButtonText = new Text('space', textStyle);
-    toolbarLeftButtonText.position.set(
-      toolbarLeftButtonGraphic.x
-        + (toolbarLeftButtonGraphic.width / 2)
-        - (toolbarLeftButtonText.width / 2),
-      toolbarGraphic.height / 2 - toolbarLeftButtonText.height / 2,
-    );
-    toolbarContainer.addChild(toolbarLeftButtonText);
-
-    // toolbar 右下角文字
-    const toolbarRightText = new Text('End Distance: 90 M', textStyle);
-    toolbarRightText.position.set(
-      930,
-      toolbarGraphic.height / 2 - toolbarRightText.height / 2,
-    );
-    toolbarContainer.addChild(toolbarRightText);
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'toolbarRightText',
-      description: '右下角文字',
-      displayObject: toolbarRightText,
-    }));
-
-    // toolbarLevelTwo Rectangle
-    const toolbarLevelTwoGraphic = new Graphics();
-    toolbarLevelTwoGraphic.visible = false;
-    toolbarLevelTwoGraphic.beginFill(0x151D46);
-    toolbarLevelTwoGraphic.lineStyle(1, 0x707070, 1);
-    toolbarLevelTwoGraphic.drawRect(0, -80, app.renderer.width, 80);
-    toolbarLevelTwoGraphic.endFill();
-    toolbarContainer.addChild(toolbarLevelTwoGraphic);
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'toolbarLevelTwoGraphic',
-      description: 'toolbarLevelTwo Rectangle',
-      displayObject: toolbarLevelTwoGraphic,
-    }));
-
-    // toolbarLevelThree Rectangle
-    const toolbarLevelThreeGraphic = new Graphics();
-    toolbarLevelThreeGraphic.visible = false;
-    toolbarLevelThreeGraphic.beginFill(0x151D46);
-    toolbarLevelThreeGraphic.lineStyle(1, 0x707070, 1);
-    toolbarLevelThreeGraphic.drawRect(0, -160, app.renderer.width, 80);
-    toolbarLevelThreeGraphic.endFill();
-    toolbarContainer.addChild(toolbarLevelThreeGraphic);
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'toolbarLevelThreeGraphic',
-      description: 'toolbarLevelTwo Rectangle',
-      displayObject: toolbarLevelThreeGraphic,
-    }));
-
-    // toolbarContainer 填完內容後最後定位
-    toolbarContainer.position.set(
-      0,
-      app.renderer.height - toolbarGraphic.height,
-    );
-
-    gameScene.addChild(toolbarContainer);
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'toolbarContainer',
-      description: 'toolbar container',
-      displayObject: toolbarContainer,
-    }));
-
-    // 背景岩石群
-    const rocksTexture = Texture.from(bgRocksImg);
-    const bgRocks = new TilingSprite(
-      rocksTexture,
-      rocksTexture.baseTexture.width,
-      rocksTexture.baseTexture.height,
-    );
-    gameScene.addChild(bgRocks);
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'bgRocks',
-      description: '背景岩石群',
-      displayObject: bgRocks,
-    }));
-
-    // 背景魚群 (左)
-    const bgLeftFishes = Sprite.from(bgFishesImg);
-    bgLeftFishes.position.set(209, 251);
-    gameScene.addChild(bgLeftFishes);
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'bgLeftFishes',
-      description: '背景魚群 (左)',
-      displayObject: bgLeftFishes,
-    }));
-
-    // 背景魚群 (右)
-    const bgRightFishes = Sprite.from(bgFishesImg);
-    bgRightFishes.position.set(640, 80);
-    gameScene.addChild(bgRightFishes);
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'bgRightFishes',
-      description: '背景魚群 (右)',
-      displayObject: bgRightFishes,
-    }));
-
-    // 萬惡的塑膠袋
-    const plasticBagDownTexture = Texture.from(plasticBagDownImg); // 下降的樣子
-    const plasticBagJumpTexture = Texture.from(plasticBagJumpImg); // 向上跳的樣子
-    const plasticBagSprite = Sprite.from(plasticBagDownTexture);
-    plasticBagSprite.position.set(
-      120,
-      app.renderer.height / 2 - plasticBagSprite.height / 2,
-    );
-    gameScene.addChild(plasticBagSprite);
-
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'plasticBag',
-      description: '萬惡的塑膠袋',
-      displayObject: plasticBagSprite,
-      vy: 3, // 預設的下降速度
-    }));
-
-
-    // 鍵盤控制萬惡的塑膠袋
-    const space = keyboard(32);
-
-    space.press = (): void => {
-      const state = store.getState();
-      const plasticBag = state.sceneObjectReducer.gameScene
-        .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'plasticBag');
-      if (plasticBag) {
-        (plasticBag.displayObject as PIXI.Sprite).texture = plasticBagJumpTexture;
-        plasticBag.vy = -5; // 按下空白的上升速度
-      }
-    };
-
-    space.release = (): void => {
-      const state = store.getState();
-      const plasticBag = state.sceneObjectReducer.gameScene
-        .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'plasticBag');
-      if (plasticBag) {
-        (plasticBag.displayObject as PIXI.Sprite).texture = plasticBagDownTexture;
-        plasticBag.vy = 3; // 預設的下降速度
-      }
-    };
-
-    // 會一直游過來的海洋生物們
-    ((): void => {
-      const coralReef = Sprite.from(coralReefImg);
-      coralReef.position.set(
-        1025,
-        app.renderer.height - coralReef.height - toolbarContainer.height,
-      );
-      gameScene.addChild(coralReef);
-
-      const id = `coralReef-${uuidv4()}`;
-      swimmingMarineLifeIds.push(id);
-      store.dispatch(addSceneObject('gameScene', {
-        id,
-        description: '珊瑚礁',
-        displayObject: coralReef,
-        vx: -2,
-      }));
-    })();
-
-    ((): void => {
-      const turtle = Sprite.from(turtleImg);
-      turtle.position.set(
-        1300,
-        37,
-      );
-      gameScene.addChild(turtle);
-
-      const id = `turtle-${uuidv4()}`;
-      swimmingMarineLifeIds.push(id);
-      store.dispatch(addSceneObject('gameScene', {
-        id,
-        description: '大海龜',
-        displayObject: turtle,
-        vx: -2,
-      }));
-    })();
-
-    ((): void => {
-      const seahorse = Sprite.from(seahorseImg);
-      seahorse.position.set(
-        1480,
-        500,
-      );
-      gameScene.addChild(seahorse);
-
-      const id = `seahorse-${uuidv4()}`;
-      swimmingMarineLifeIds.push(id);
-      store.dispatch(addSceneObject('gameScene', {
-        id,
-        description: '海馬',
-        displayObject: seahorse,
-        vx: -2,
-      }));
-    })();
-
-    ((): void => {
-      const coral = Sprite.from(coralImg);
-      coral.position.set(
-        1725,
-        app.renderer.height - coral.height - toolbarContainer.height,
-      );
-      gameScene.addChild(coral);
-
-      const id = `coral-${uuidv4()}`;
-      swimmingMarineLifeIds.push(id);
-      store.dispatch(addSceneObject('gameScene', {
-        id,
-        description: '珊瑚',
-        displayObject: coral,
-        vx: -2,
-      }));
-    })();
-
-    ((): void => {
-      const fishYellow = Sprite.from(fishYellowImg);
-      fishYellow.position.set(
-        3000,
-        400,
-      );
-      gameScene.addChild(fishYellow);
-
-      const id = `fishYellow-${uuidv4()}`;
-      swimmingMarineLifeIds.push(id);
-      store.dispatch(addSceneObject('gameScene', {
-        id,
-        description: '黃色小魚',
-        displayObject: fishYellow,
-        vx: -3,
-      }));
-    })();
-
-    ((): void => {
-      const littleTurtle = Sprite.from(littleTurtleImg);
-      littleTurtle.position.set(
-        2200,
-        160,
-      );
-      gameScene.addChild(littleTurtle);
-
-      const id = `littleTurtle-${uuidv4()}`;
-      swimmingMarineLifeIds.push(id);
-      store.dispatch(addSceneObject('gameScene', {
-        id,
-        description: '小海龜',
-        displayObject: littleTurtle,
-        vx: -2,
-      }));
-    })();
-
-    ((): void => {
-      const cheilinus = Sprite.from(cheilinusUndulatusImg);
-      cheilinus.position.set(
-        2500,
-        440,
-      );
-      gameScene.addChild(cheilinus);
-
-      const id = `cheilinus-${uuidv4()}`;
-      swimmingMarineLifeIds.push(id);
-      store.dispatch(addSceneObject('gameScene', {
-        id,
-        description: '龍王鯛',
-        displayObject: cheilinus,
-        vx: -2,
-      }));
-    })();
-
-    ((): void => {
-      const bolbometopon = Sprite.from(bolbometoponMuricatumImg);
-      bolbometopon.position.set(
-        2900,
-        80,
-      );
-      gameScene.addChild(bolbometopon);
-
-      const id = `bolbometopon-${uuidv4()}`;
-      swimmingMarineLifeIds.push(id);
-      store.dispatch(addSceneObject('gameScene', {
-        id,
-        description: '龍頭鸚哥魚',
-        displayObject: bolbometopon,
-        vx: -2,
-      }));
-    })();
   };
 
   const initKarmaScene = (): void => {
