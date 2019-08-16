@@ -554,11 +554,11 @@ const initGameScene = (): void => {
     }));
   })();
 
-  // 碰撞畫面
+  // 小視窗背景
   const overlapBackground = new Graphics();
   // overlapBackground.visible = false;
-  overlapBackground.alpha = 0.5;
-  overlapBackground.beginFill(0x3E3E3E);
+  overlapBackground.alpha = 0.6;
+  overlapBackground.beginFill(0x000000);
   overlapBackground.drawRect(0, 0, app.renderer.width, app.renderer.height);
   overlapBackground.endFill();
   gameScene.addChild(overlapBackground);
