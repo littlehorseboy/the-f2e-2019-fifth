@@ -224,13 +224,16 @@ const play = (distance: number, delta: number): void => {
     }
   }
 
-  if (gameSceneObject.bgRightFishes) {
-    gameSceneObject.bgRightFishes.position.set(
-      gameSceneObject.bgRightFishes.x - 3,
-      gameSceneObject.bgRightFishes.y,
+  const bgRightFishes = state.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'bgRightFishes');
+
+  if (bgRightFishes) {
+    bgRightFishes.displayObject.position.set(
+      bgRightFishes.displayObject.x - 3,
+      bgRightFishes.displayObject.y,
     );
-    if (gameSceneObject.bgRightFishes.x < 0 - gameSceneObject.bgRightFishes.width) {
-      gameSceneObject.bgRightFishes.x = app.renderer.width + gameSceneObject.bgRightFishes.width;
+    if (bgRightFishes.displayObject.x < 0 - bgRightFishes.displayObject.width) {
+      bgRightFishes.displayObject.x = app.renderer.width + bgRightFishes.displayObject.width;
     }
   }
 
@@ -681,9 +684,15 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     }));
 
     // 背景魚群 (右)
-    gameSceneObject.bgRightFishes = Sprite.from(bgFishesImg);
-    gameSceneObject.bgRightFishes.position.set(640, 80);
-    gameScene.addChild(gameSceneObject.bgRightFishes);
+    const bgRightFishes = Sprite.from(bgFishesImg);
+    bgRightFishes.position.set(640, 80);
+    gameScene.addChild(bgRightFishes);
+
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'bgRightFishes',
+      description: '背景魚群 (右)',
+      displayObject: bgRightFishes,
+    }));
 
     // 萬惡的塑膠袋
     const plasticBagDownTexture = Texture.from(plasticBagDownImg);
