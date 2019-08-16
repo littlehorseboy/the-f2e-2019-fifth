@@ -52,7 +52,7 @@ const app = new Application({
 
 document.body.appendChild(app.view);
 
-let state: (delta: number, distance?: number) => void; // 遊戲場景狀態
+let sceneState: (delta: number, distance?: number) => void; // 遊戲場景狀態
 let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
 interface PlasticBagI extends PIXI.Sprite {
@@ -158,9 +158,9 @@ const play = (distance: number, delta: number): void => {
   }
 
   if (countdown.seconds <= 30) {
-    state = play.bind(undefined, 30);
+    sceneState = play.bind(undefined, 30);
   } else if (countdown.seconds <= 60) {
-    state = play.bind(undefined, 60);
+    sceneState = play.bind(undefined, 60);
   }
 
   const background90 = reduxState.sceneObjectReducer.gameScene
@@ -280,7 +280,7 @@ const start = (): void => {
 };
 
 const gameLoop = (delta: number): void => {
-  state(delta);
+  sceneState(delta);
 };
 
 // 創造由上而下的漸層背景
@@ -370,7 +370,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       startButtonGraphic.buttonMode = true;
       startButtonGraphic.on('click', (): void => {
         countdown.setCountdownStatus('play');
-        state = play.bind(undefined, 90);
+        sceneState = play.bind(undefined, 90);
       });
       startButtonContainer.addChild(startButtonGraphic);
 
@@ -402,7 +402,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       karmaButtonText.interactive = true;
       karmaButtonText.buttonMode = true;
       karmaButtonText.on('click', (): void => {
-        state = karma;
+        sceneState = karma;
       });
 
       gameStartScene.addChild(karmaButtonText);
@@ -878,7 +878,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     backButtonGraphic.interactive = true;
     backButtonGraphic.buttonMode = true;
     backButtonGraphic.on('click', (): void => {
-      state = start;
+      sceneState = start;
     });
     backButtonGraphic.position.set(
       app.renderer.width / 2 - backButtonGraphic.width / 2,
@@ -901,10 +901,10 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   initKarmaScene();
 
   // horseTODO: 暫時拿來亂動
-  // state = start;
+  // sceneState = start;
 
   countdown.setCountdownStatus('play');
-  state = play.bind(undefined, 90);
+  sceneState = play.bind(undefined, 90);
 
   app.ticker.add((delta: number): void => gameLoop(delta));
 };
