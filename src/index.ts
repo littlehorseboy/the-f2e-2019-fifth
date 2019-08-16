@@ -1,6 +1,9 @@
 import 'normalize.css';
 import * as PIXI from 'pixi.js';
 import keyboard from './assets/js/keyboard';
+import store from './reducers/configureStore';
+
+const reduxState = store.getState();
 
 require('./index.css');
 
