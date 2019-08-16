@@ -189,11 +189,14 @@ const play = (distance: number, delta: number): void => {
     .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'bgRocks');
 
   if (bgRocks) {
-    if (gameSceneObject.toolbarContainer) {
+    const toolbarContainer = state.sceneObjectReducer.gameScene
+      .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'toolbarContainer');
+
+    if (toolbarContainer) {
       bgRocks.displayObject.position.set(
         0,
         app.renderer.height - bgRocks.displayObject.height
-          - gameSceneObject.toolbarContainer.height,
+          - toolbarContainer.displayObject.height,
       );
     }
     (bgRocks.displayObject as PIXI.TilingSprite).tilePosition.set(
@@ -245,17 +248,20 @@ const play = (distance: number, delta: number): void => {
       plasticBag.displayObject.y += plasticBag.vy;
     }
 
+    const toolbarContainer = state.sceneObjectReducer.gameScene
+      .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'toolbarContainer');
+
     // 自動下墜
-    if (gameSceneObject.toolbarContainer) {
+    if (toolbarContainer) {
       if (
         plasticBag.displayObject.y
           > app.renderer.height
             - plasticBag.displayObject.height
-            - gameSceneObject.toolbarContainer.height
+            - toolbarContainer.displayObject.height
       ) {
         plasticBag.displayObject.y = app.renderer.height
           - plasticBag.displayObject.height
-          - gameSceneObject.toolbarContainer.height;
+          - toolbarContainer.displayObject.height;
         plasticBag.displayObject.y += plasticBag.vy;
       } else if (plasticBag.vy > 0) {
         plasticBag.displayObject.y += plasticBag.vy;
@@ -264,11 +270,9 @@ const play = (distance: number, delta: number): void => {
   }
 
   gameSceneObject.marineLife.forEach((life: MarineLifeI): void => {
-    if (gameSceneObject.toolbarContainer) {
-      Object.assign(life, {
-        x: life.x + life.vx,
-      });
-    }
+    Object.assign(life, {
+      x: life.x + life.vx,
+    });
   });
 };
 
@@ -658,7 +662,12 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     );
 
     gameScene.addChild(toolbarContainer);
-    gameSceneObject.toolbarContainer = toolbarContainer;
+
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'toolbarContainer',
+      description: 'toolbar container',
+      displayObject: toolbarContainer,
+    }));
 
     // 背景岩石群
     const rocksTexture = Texture.from(bgRocksImg);
@@ -742,7 +751,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     const coralReef = Sprite.from(coralReefImg);
     coralReef.position.set(
       1025,
-      app.renderer.height - coralReef.height - gameSceneObject.toolbarContainer.height,
+      app.renderer.height - coralReef.height - toolbarContainer.height,
     );
     gameScene.addChild(coralReef);
     (coralReef as MarineLifeI).vx = -2;
@@ -778,7 +787,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     const coral = Sprite.from(coralImg);
     coral.position.set(
       1725,
-      app.renderer.height - coral.height - gameSceneObject.toolbarContainer.height,
+      app.renderer.height - coral.height - toolbarContainer.height,
     );
     gameScene.addChild(coral);
     (coral as MarineLifeI).vx = -2;
