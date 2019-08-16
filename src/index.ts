@@ -55,21 +55,16 @@ document.body.appendChild(app.view);
 let sceneState: (delta: number, distance?: number) => void; // 遊戲場景狀態
 let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
-interface PlasticBagI extends PIXI.Sprite {
-  vy: number;
-}
 interface MarineLifeI extends PIXI.Sprite {
   vx: number;
 }
 interface GameSceneObjectI {
-  plasticBag: null | PlasticBagI;
   toolbarContainer: null | PIXI.Container;
   toolbarLevelTwoGraphic: null | PIXI.Graphics;
   toolbarLevelThreeGraphic: null | PIXI.Graphics;
   marineLife: MarineLifeI[];
 }
 const gameSceneObject: GameSceneObjectI = {
-  plasticBag: null,
   toolbarContainer: null,
   toolbarLevelTwoGraphic: null,
   toolbarLevelThreeGraphic: null,
@@ -240,27 +235,30 @@ const play = (distance: number, delta: number): void => {
     (toolbarRightText.displayObject as PIXI.Text).text = `End Distance: ${countdown.seconds} M`;
   }
 
-  if (gameSceneObject.plasticBag) {
+  const plasticBag = state.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'plasticBag');
+
+  if (plasticBag && plasticBag.vy) {
     // 按空白時 向上移動
     // y 不能小於 0，且 vy 加速度是負數
-    if (gameSceneObject.plasticBag.y > 0 && gameSceneObject.plasticBag.vy < 0) {
-      gameSceneObject.plasticBag.y += gameSceneObject.plasticBag.vy;
+    if (plasticBag.displayObject.y > 0 && plasticBag.vy < 0) {
+      plasticBag.displayObject.y += plasticBag.vy;
     }
 
     // 自動下墜
     if (gameSceneObject.toolbarContainer) {
       if (
-        gameSceneObject.plasticBag.y
+        plasticBag.displayObject.y
           > app.renderer.height
-            - gameSceneObject.plasticBag.height
+            - plasticBag.displayObject.height
             - gameSceneObject.toolbarContainer.height
       ) {
-        gameSceneObject.plasticBag.y = app.renderer.height
-          - gameSceneObject.plasticBag.height
+        plasticBag.displayObject.y = app.renderer.height
+          - plasticBag.displayObject.height
           - gameSceneObject.toolbarContainer.height;
-        gameSceneObject.plasticBag.y += gameSceneObject.plasticBag.vy;
-      } else if (gameSceneObject.plasticBag.vy > 0) {
-        gameSceneObject.plasticBag.y += gameSceneObject.plasticBag.vy;
+        plasticBag.displayObject.y += plasticBag.vy;
+      } else if (plasticBag.vy > 0) {
+        plasticBag.displayObject.y += plasticBag.vy;
       }
     }
   }
@@ -700,33 +698,43 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     }));
 
     // 萬惡的塑膠袋
-    const plasticBagDownTexture = Texture.from(plasticBagDownImg);
-    const plasticBag = Sprite.from(plasticBagDownTexture);
-    plasticBag.position.set(
+    const plasticBagDownTexture = Texture.from(plasticBagDownImg); // 下降的樣子
+    const plasticBagJumpTexture = Texture.from(plasticBagJumpImg); // 向上跳的樣子
+    const plasticBagSprite = Sprite.from(plasticBagDownTexture);
+    plasticBagSprite.position.set(
       120,
-      app.renderer.height / 2 - plasticBag.height / 2,
+      app.renderer.height / 2 - plasticBagSprite.height / 2,
     );
-    gameScene.addChild(plasticBag);
+    gameScene.addChild(plasticBagSprite);
 
-    const plasticBagJumpTexture = Texture.from(plasticBagJumpImg);
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'plasticBag',
+      description: '萬惡的塑膠袋',
+      displayObject: plasticBagSprite,
+      vy: 3, // 預設的下降速度
+    }));
 
-    (plasticBag as PlasticBagI).vy = 3; // 預設的下降速度
-    gameSceneObject.plasticBag = plasticBag as PlasticBagI;
 
     // 鍵盤控制萬惡的塑膠袋
     const space = keyboard(32);
 
     space.press = (): void => {
-      if (gameSceneObject.plasticBag) {
-        gameSceneObject.plasticBag.texture = plasticBagJumpTexture;
-        gameSceneObject.plasticBag.vy = -5;
+      const state = store.getState();
+      const plasticBag = state.sceneObjectReducer.gameScene
+        .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'plasticBag');
+      if (plasticBag) {
+        (plasticBag.displayObject as PIXI.Sprite).texture = plasticBagJumpTexture;
+        plasticBag.vy = -5; // 按下空白的上升速度
       }
     };
 
     space.release = (): void => {
-      if (gameSceneObject.plasticBag) {
-        gameSceneObject.plasticBag.texture = plasticBagDownTexture;
-        gameSceneObject.plasticBag.vy = 3; // 預設的下降速度
+      const state = store.getState();
+      const plasticBag = state.sceneObjectReducer.gameScene
+        .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'plasticBag');
+      if (plasticBag) {
+        (plasticBag.displayObject as PIXI.Sprite).texture = plasticBagDownTexture;
+        plasticBag.vy = 3; // 預設的下降速度
       }
     };
 
