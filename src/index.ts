@@ -1,5 +1,6 @@
 import 'normalize.css';
 import * as PIXI from 'pixi.js';
+import uuidv4 from 'uuid/v4';
 import keyboard from './assets/js/keyboard';
 import store from './reducers/configureStore';
 import { addSceneObject } from './actions/sceneObject/sceneObject';
@@ -59,11 +60,9 @@ interface MarineLifeI extends PIXI.Sprite {
   vx: number;
 }
 interface GameSceneObjectI {
-  toolbarLevelThreeGraphic: null | PIXI.Graphics;
   marineLife: MarineLifeI[];
 }
 const gameSceneObject: GameSceneObjectI = {
-  toolbarLevelThreeGraphic: null,
   marineLife: [],
 };
 let gameKarmaScene: PIXI.Container; // 業障場景

@@ -8,7 +8,6 @@ export interface WithPIXIDisplayObject {
   vy?: number;
 }
 
-
 export interface SceneObjectI {
   startScene: WithPIXIDisplayObject[];
   gameScene: WithPIXIDisplayObject[];
