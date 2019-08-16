@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from 'redux';
-import { devToolsEnhancer } from 'redux-devtools-extension/developmentOnly';
+// import { devToolsEnhancer } from 'redux-devtools-extension/developmentOnly';
 import sceneObjectReducer from './sceneObject/sceneObject';
 
 const rootReducer = combineReducers({
@@ -8,7 +8,7 @@ const rootReducer = combineReducers({
 
 const store = createStore(
   rootReducer,
-  devToolsEnhancer({}),
+  // devToolsEnhancer({}),
 );
 
 export default store;

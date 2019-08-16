@@ -1,18 +1,18 @@
-import { SceneObject } from '../../reducers/sceneObject/sceneObject';
+import { WithPIXIDisplayObject, SceneObjectI } from '../../reducers/sceneObject/sceneObject';
 
 export const ADDSCENEOBJECT = 'ADDSCENEOBJECT';
 
 interface AddSceneObjectActionI {
   type: typeof ADDSCENEOBJECT;
   payload: {
-    sceneTarget: keyof SceneObject;
-    displayObject: PIXI.DisplayObject;
+    sceneTarget: keyof SceneObjectI;
+    displayObject: WithPIXIDisplayObject;
   };
 }
 
 export const addSceneObject = (
-  sceneTarget: keyof SceneObject,
-  displayObject: PIXI.DisplayObject,
+  sceneTarget: keyof SceneObjectI,
+  displayObject: WithPIXIDisplayObject,
 ): AddSceneObjectActionI => ({
   type: ADDSCENEOBJECT,
   payload: {

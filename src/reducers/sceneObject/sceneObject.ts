@@ -1,18 +1,25 @@
 import { sceneObjectActionTypes, ADDSCENEOBJECT } from '../../actions/sceneObject/sceneObject';
 
-export interface SceneObject {
-  startScene: PIXI.DisplayObject[];
-  gameScene: PIXI.DisplayObject[];
-  karmaScene: PIXI.DisplayObject[];
+export interface WithPIXIDisplayObject {
+  id: string;
+  description: string;
+  displayObject: PIXI.DisplayObject;
 }
 
-const initState: SceneObject = {
+
+export interface SceneObjectI {
+  startScene: WithPIXIDisplayObject[];
+  gameScene: WithPIXIDisplayObject[];
+  karmaScene: WithPIXIDisplayObject[];
+}
+
+const initState: SceneObjectI = {
   startScene: [],
   gameScene: [],
   karmaScene: [],
 };
 
-const reducer = (state = initState, action: sceneObjectActionTypes): SceneObject => {
+const reducer = (state = initState, action: sceneObjectActionTypes): SceneObjectI => {
   switch (action.type) {
     case ADDSCENEOBJECT:
       return {

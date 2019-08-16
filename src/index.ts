@@ -2,8 +2,8 @@ import 'normalize.css';
 import * as PIXI from 'pixi.js';
 import keyboard from './assets/js/keyboard';
 import store from './reducers/configureStore';
-
-const reduxState = store.getState();
+import { addSceneObject } from './actions/sceneObject/sceneObject';
+import { WithPIXIDisplayObject } from './reducers/sceneObject/sceneObject';
 
 require('./index.css');
 
@@ -62,9 +62,6 @@ interface MarineLifeI extends PIXI.Sprite {
   vx: number;
 }
 interface GameSceneObjectI {
-  background90: null | PIXI.Sprite;
-  background60: null | PIXI.Sprite;
-  background30: null | PIXI.Sprite;
   bgRocks: null | PIXI.TilingSprite;
   bgLeftFishes: null | PIXI.Sprite;
   bgRightFishes: null | PIXI.Sprite;
@@ -76,9 +73,6 @@ interface GameSceneObjectI {
   marineLife: MarineLifeI[];
 }
 const gameSceneObject: GameSceneObjectI = {
-  background90: null,
-  background60: null,
-  background30: null,
   bgRocks: null,
   bgLeftFishes: null,
   bgRightFishes: null,
@@ -154,6 +148,8 @@ document.addEventListener('visibilitychange', (): void => {
 });
 
 const play = (distance: number, delta: number): void => {
+  const reduxState = store.getState();
+
   if (gameStartScene.visible) {
     gameStartScene.visible = false;
   }
@@ -167,29 +163,38 @@ const play = (distance: number, delta: number): void => {
     state = play.bind(undefined, 60);
   }
 
+  const background90 = reduxState.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'background90');
+  const background60 = reduxState.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'background60');
+  const background30 = reduxState.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'background30');
+
   if (
-    gameSceneObject.background90 && gameSceneObject.background60 && gameSceneObject.background30
+    background90 && background60 && background30
   ) {
     if (distance <= 30) {
-      gameSceneObject.background90.visible = false;
-      gameSceneObject.background60.visible = false;
-      gameSceneObject.background30.visible = true;
-
-      if (gameSceneObject.toolbarLevelThreeGraphic) {
-        gameSceneObject.toolbarLevelThreeGraphic.visible = true;
-      }
+      background90.displayObject.visible = false;
+      background60.displayObject.visible = false;
+      background30.displayObject.visible = true;
     } else if (distance <= 60) {
-      gameSceneObject.background90.visible = false;
-      gameSceneObject.background60.visible = true;
-      gameSceneObject.background30.visible = false;
-
-      if (gameSceneObject.toolbarLevelTwoGraphic) {
-        gameSceneObject.toolbarLevelTwoGraphic.visible = true;
-      }
+      background90.displayObject.visible = false;
+      background60.displayObject.visible = true;
+      background30.displayObject.visible = false;
     } else {
-      gameSceneObject.background90.visible = true;
-      gameSceneObject.background60.visible = false;
-      gameSceneObject.background30.visible = false;
+      background90.displayObject.visible = true;
+      background60.displayObject.visible = false;
+      background30.displayObject.visible = false;
+    }
+  }
+
+  if (
+    gameSceneObject.toolbarLevelThreeGraphic && gameSceneObject.toolbarLevelTwoGraphic
+  ) {
+    if (distance <= 30) {
+      gameSceneObject.toolbarLevelThreeGraphic.visible = true;
+    } else if (distance <= 60) {
+      gameSceneObject.toolbarLevelTwoGraphic.visible = true;
     }
   }
 
@@ -516,7 +521,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     gameScene.visible = false;
     app.stage.addChild(gameScene);
 
-    gameSceneObject.background90 = ((): PIXI.Sprite => {
+    const background90 = ((): PIXI.Sprite => {
       // 背景 90M
       const gradTexture = createGradTexture('#63CFE5', '#76A6E0');
       const gradientBg = new Sprite(gradTexture);
@@ -528,7 +533,13 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       return gradientBg;
     })();
 
-    gameSceneObject.background60 = ((): PIXI.Sprite => {
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'background90',
+      description: '距離終點 90 M 的漸層背景',
+      displayObject: background90,
+    }));
+
+    const background60 = ((): PIXI.Sprite => {
       // 背景 60M
       const gradTexture = createGradTexture('#ACDBE5', '#B3C7E0');
       const gradientBg = new Sprite(gradTexture);
@@ -540,7 +551,13 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       return gradientBg;
     })();
 
-    gameSceneObject.background30 = ((): PIXI.Sprite => {
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'background60',
+      description: '距離終點 60 M 的漸層背景',
+      displayObject: background60,
+    }));
+
+    const background30 = ((): PIXI.Sprite => {
       // 背景 30M
       const gradTexture = createGradTexture('#CEE1E5', '#CAD4E0');
       const gradientBg = new Sprite(gradTexture);
@@ -551,6 +568,12 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
 
       return gradientBg;
     })();
+
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'background30',
+      description: '距離終點 30 M 的漸層背景',
+      displayObject: background30,
+    }));
 
     const toolbarContainer = new Container();
 
