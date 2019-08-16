@@ -59,14 +59,10 @@ interface MarineLifeI extends PIXI.Sprite {
   vx: number;
 }
 interface GameSceneObjectI {
-  toolbarContainer: null | PIXI.Container;
-  toolbarLevelTwoGraphic: null | PIXI.Graphics;
   toolbarLevelThreeGraphic: null | PIXI.Graphics;
   marineLife: MarineLifeI[];
 }
 const gameSceneObject: GameSceneObjectI = {
-  toolbarContainer: null,
-  toolbarLevelTwoGraphic: null,
   toolbarLevelThreeGraphic: null,
   marineLife: [],
 };
@@ -175,13 +171,18 @@ const play = (distance: number, delta: number): void => {
     }
   }
 
+  const toolbarLevelTwoGraphic = state.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'toolbarLevelTwoGraphic');
+  const toolbarLevelThreeGraphic = state.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'toolbarLevelThreeGraphic');
+
   if (
-    gameSceneObject.toolbarLevelThreeGraphic && gameSceneObject.toolbarLevelTwoGraphic
+    toolbarLevelTwoGraphic && toolbarLevelThreeGraphic
   ) {
     if (distance <= 30) {
-      gameSceneObject.toolbarLevelThreeGraphic.visible = true;
+      toolbarLevelThreeGraphic.displayObject.visible = true;
     } else if (distance <= 60) {
-      gameSceneObject.toolbarLevelTwoGraphic.visible = true;
+      toolbarLevelTwoGraphic.displayObject.visible = true;
     }
   }
 
@@ -643,7 +644,12 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     toolbarLevelTwoGraphic.drawRect(0, -80, app.renderer.width, 80);
     toolbarLevelTwoGraphic.endFill();
     toolbarContainer.addChild(toolbarLevelTwoGraphic);
-    gameSceneObject.toolbarLevelTwoGraphic = toolbarLevelTwoGraphic;
+
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'toolbarLevelTwoGraphic',
+      description: 'toolbarLevelTwo Rectangle',
+      displayObject: toolbarLevelTwoGraphic,
+    }));
 
     // toolbarLevelThree Rectangle
     const toolbarLevelThreeGraphic = new Graphics();
@@ -653,7 +659,12 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     toolbarLevelThreeGraphic.drawRect(0, -160, app.renderer.width, 80);
     toolbarLevelThreeGraphic.endFill();
     toolbarContainer.addChild(toolbarLevelThreeGraphic);
-    gameSceneObject.toolbarLevelThreeGraphic = toolbarLevelThreeGraphic;
+
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'toolbarLevelThreeGraphic',
+      description: 'toolbarLevelTwo Rectangle',
+      displayObject: toolbarLevelThreeGraphic,
+    }));
 
     // toolbarContainer 填完內容後最後定位
     toolbarContainer.position.set(
