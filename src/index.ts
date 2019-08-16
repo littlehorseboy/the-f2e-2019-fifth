@@ -65,7 +65,7 @@ interface GameSceneObjectI {
 const gameSceneObject: GameSceneObjectI = {
   marineLife: [],
 };
-const swimmingMarineLifeId: string[] = [];
+const swimmingMarineLifeIds: string[] = [];
 let gameKarmaScene: PIXI.Container; // 業障場景
 
 const end = (): void => {
@@ -271,7 +271,7 @@ const play = (distance: number, delta: number): void => {
   }
 
   state.sceneObjectReducer.gameScene.forEach((marineLife): void => {
-    if (swimmingMarineLifeId.includes(marineLife.id)) {
+    if (swimmingMarineLifeIds.includes(marineLife.id)) {
       if (marineLife.vx) {
         Object.assign(marineLife.displayObject, {
           x: marineLife.displayObject.x + marineLife.vx,
@@ -772,7 +772,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       gameScene.addChild(coralReef);
 
       const id = `coralReef-${uuidv4()}`;
-      swimmingMarineLifeId.push(id);
+      swimmingMarineLifeIds.push(id);
       store.dispatch(addSceneObject('gameScene', {
         id,
         description: '珊瑚礁',
@@ -790,7 +790,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       gameScene.addChild(turtle);
 
       const id = `turtle-${uuidv4()}`;
-      swimmingMarineLifeId.push(id);
+      swimmingMarineLifeIds.push(id);
       store.dispatch(addSceneObject('gameScene', {
         id,
         description: '大海龜',
@@ -808,7 +808,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       gameScene.addChild(seahorse);
 
       const id = `seahorse-${uuidv4()}`;
-      swimmingMarineLifeId.push(id);
+      swimmingMarineLifeIds.push(id);
       store.dispatch(addSceneObject('gameScene', {
         id,
         description: '海馬',
@@ -817,65 +817,95 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
       }));
     })();
 
-    const coral = Sprite.from(coralImg);
-    coral.position.set(
-      1725,
-      app.renderer.height - coral.height - toolbarContainer.height,
-    );
-    gameScene.addChild(coral);
-    (coral as MarineLifeI).vx = -2;
-    gameSceneObject.marineLife = [
-      ...gameSceneObject.marineLife,
-      (coral as MarineLifeI),
-    ];
+    ((): void => {
+      const coral = Sprite.from(coralImg);
+      coral.position.set(
+        1725,
+        app.renderer.height - coral.height - toolbarContainer.height,
+      );
+      gameScene.addChild(coral);
 
-    const fishYellow = Sprite.from(fishYellowImg);
-    fishYellow.position.set(
-      3000,
-      400,
-    );
-    gameScene.addChild(fishYellow);
-    (fishYellow as MarineLifeI).vx = -3;
-    gameSceneObject.marineLife = [
-      ...gameSceneObject.marineLife,
-      (fishYellow as MarineLifeI),
-    ];
+      const id = `coral-${uuidv4()}`;
+      swimmingMarineLifeIds.push(id);
+      store.dispatch(addSceneObject('gameScene', {
+        id,
+        description: '珊瑚',
+        displayObject: coral,
+        vx: -2,
+      }));
+    })();
 
-    const littleTurtle = Sprite.from(littleTurtleImg);
-    littleTurtle.position.set(
-      2200,
-      160,
-    );
-    gameScene.addChild(littleTurtle);
-    (littleTurtle as MarineLifeI).vx = -2;
-    gameSceneObject.marineLife = [
-      ...gameSceneObject.marineLife,
-      (littleTurtle as MarineLifeI),
-    ];
+    ((): void => {
+      const fishYellow = Sprite.from(fishYellowImg);
+      fishYellow.position.set(
+        3000,
+        400,
+      );
+      gameScene.addChild(fishYellow);
 
-    const cheilinus = Sprite.from(cheilinusUndulatusImg);
-    cheilinus.position.set(
-      2500,
-      440,
-    );
-    gameScene.addChild(cheilinus);
-    (cheilinus as MarineLifeI).vx = -2;
-    gameSceneObject.marineLife = [
-      ...gameSceneObject.marineLife,
-      (cheilinus as MarineLifeI),
-    ];
+      const id = `fishYellow-${uuidv4()}`;
+      swimmingMarineLifeIds.push(id);
+      store.dispatch(addSceneObject('gameScene', {
+        id,
+        description: '黃色小魚',
+        displayObject: fishYellow,
+        vx: -3,
+      }));
+    })();
 
-    const bolbometopon = Sprite.from(bolbometoponMuricatumImg);
-    bolbometopon.position.set(
-      2900,
-      80,
-    );
-    gameScene.addChild(bolbometopon);
-    (bolbometopon as MarineLifeI).vx = -2;
-    gameSceneObject.marineLife = [
-      ...gameSceneObject.marineLife,
-      (bolbometopon as MarineLifeI),
-    ];
+    ((): void => {
+      const littleTurtle = Sprite.from(littleTurtleImg);
+      littleTurtle.position.set(
+        2200,
+        160,
+      );
+      gameScene.addChild(littleTurtle);
+
+      const id = `littleTurtle-${uuidv4()}`;
+      swimmingMarineLifeIds.push(id);
+      store.dispatch(addSceneObject('gameScene', {
+        id,
+        description: '小海龜',
+        displayObject: littleTurtle,
+        vx: -2,
+      }));
+    })();
+
+    ((): void => {
+      const cheilinus = Sprite.from(cheilinusUndulatusImg);
+      cheilinus.position.set(
+        2500,
+        440,
+      );
+      gameScene.addChild(cheilinus);
+
+      const id = `cheilinus-${uuidv4()}`;
+      swimmingMarineLifeIds.push(id);
+      store.dispatch(addSceneObject('gameScene', {
+        id,
+        description: '龍王鯛',
+        displayObject: cheilinus,
+        vx: -2,
+      }));
+    })();
+
+    ((): void => {
+      const bolbometopon = Sprite.from(bolbometoponMuricatumImg);
+      bolbometopon.position.set(
+        2900,
+        80,
+      );
+      gameScene.addChild(bolbometopon);
+
+      const id = `bolbometopon-${uuidv4()}`;
+      swimmingMarineLifeIds.push(id);
+      store.dispatch(addSceneObject('gameScene', {
+        id,
+        description: '龍頭鸚哥魚',
+        displayObject: bolbometopon,
+        vx: -2,
+      }));
+    })();
   };
 
   const initKarmaScene = (): void => {
