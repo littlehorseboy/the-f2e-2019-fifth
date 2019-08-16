@@ -1,6 +1,15 @@
+/**
+ * 矩形碰撞
+ * @param r1 Sprite
+ * @param r2 Sprite
+ * @param spacingWidth > 0 變寬，< 0 變窄
+ * @param spacingHeight > 0 變高，< 0 變矮
+ */
 export default function hitTestRectangle(
   r1: PIXI.Sprite | PIXI.Graphics,
   r2: PIXI.Sprite | PIXI.Graphics,
+  spacingWidth = 0,
+  spacingHeight = 0,
 ): boolean {
   // hit will determine whether there's a collision
   let hit: boolean;
@@ -26,9 +35,9 @@ export default function hitTestRectangle(
   const combinedHalfHeights = r1HalfHeight + r2HalfHeight;
 
   // Check for a collision on the x axis
-  if (Math.abs(vx) < combinedHalfWidths) {
+  if (Math.abs(vx) < combinedHalfWidths + spacingWidth) {
     // A collision might be occuring. Check for a collision on the y axis
-    if (Math.abs(vy) < combinedHalfHeights) {
+    if (Math.abs(vy) < combinedHalfHeights + spacingHeight) {
       hit = true;
     } else {
       // There's no collision on the y axis

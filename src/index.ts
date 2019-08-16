@@ -5,6 +5,7 @@ import keyboard from './assets/js/keyboard';
 import store from './reducers/configureStore';
 import { addSceneObject } from './actions/sceneObject/sceneObject';
 import { WithPIXIDisplayObject } from './reducers/sceneObject/sceneObject';
+import hitTestRectangle from './assets/js/hitTestReactangle';
 
 require('./index.css');
 
@@ -270,12 +271,24 @@ const play = (distance: number, delta: number): void => {
     }
   }
 
+  // 游泳海洋生物 (有被記錄 Id 的) 向左游
   state.sceneObjectReducer.gameScene.forEach((marineLife): void => {
     if (swimmingMarineLifeIds.includes(marineLife.id)) {
       if (marineLife.vx) {
         Object.assign(marineLife.displayObject, {
           x: marineLife.displayObject.x + marineLife.vx,
         });
+      }
+
+      if (
+        plasticBag && hitTestRectangle(
+          (marineLife.displayObject as PIXI.Sprite),
+          (plasticBag.displayObject as PIXI.Sprite),
+          -25,
+          -25,
+        )
+      ) {
+        sceneState = end;
       }
     }
   });
