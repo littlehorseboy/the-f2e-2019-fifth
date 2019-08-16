@@ -3,7 +3,9 @@ import { sceneObjectActionTypes, ADDSCENEOBJECT } from '../../actions/sceneObjec
 export interface WithPIXIDisplayObject {
   id: string;
   description: string;
-  displayObject: PIXI.DisplayObject;
+  displayObject: PIXI.TilingSprite | PIXI.Sprite | PIXI.Container;
+  vx?: number;
+  vy?: number;
 }
 
 

@@ -62,8 +62,6 @@ interface MarineLifeI extends PIXI.Sprite {
   vx: number;
 }
 interface GameSceneObjectI {
-  bgRocks: null | PIXI.TilingSprite;
-  bgLeftFishes: null | PIXI.Sprite;
   bgRightFishes: null | PIXI.Sprite;
   toolbarRightText: null | PIXI.Text;
   plasticBag: null | PlasticBagI;
@@ -73,8 +71,6 @@ interface GameSceneObjectI {
   marineLife: MarineLifeI[];
 }
 const gameSceneObject: GameSceneObjectI = {
-  bgRocks: null,
-  bgLeftFishes: null,
   bgRightFishes: null,
   toolbarRightText: null,
   plasticBag: null,
@@ -198,27 +194,33 @@ const play = (distance: number, delta: number): void => {
     }
   }
 
-  if (gameSceneObject.bgRocks) {
+  const bgRocks = reduxState.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'bgRocks');
+
+  if (bgRocks) {
     if (gameSceneObject.toolbarContainer) {
-      gameSceneObject.bgRocks.position.set(
+      bgRocks.displayObject.position.set(
         0,
-        app.renderer.height - gameSceneObject.bgRocks.height
+        app.renderer.height - bgRocks.displayObject.height
           - gameSceneObject.toolbarContainer.height,
       );
     }
-    gameSceneObject.bgRocks.tilePosition.set(
-      gameSceneObject.bgRocks.tilePosition.x - 0.5,
-      gameSceneObject.bgRocks.tilePosition.y,
+    (bgRocks.displayObject as PIXI.TilingSprite).tilePosition.set(
+      (bgRocks.displayObject as PIXI.TilingSprite).tilePosition.x - 0.5,
+      (bgRocks.displayObject as PIXI.TilingSprite).tilePosition.y,
     );
   }
 
-  if (gameSceneObject.bgLeftFishes) {
-    gameSceneObject.bgLeftFishes.position.set(
-      gameSceneObject.bgLeftFishes.x - 5,
-      gameSceneObject.bgLeftFishes.y,
+  const bgLeftFishes = reduxState.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'bgLeftFishes');
+
+  if (bgLeftFishes) {
+    bgLeftFishes.displayObject.position.set(
+      bgLeftFishes.displayObject.x - 5,
+      bgLeftFishes.displayObject.y,
     );
-    if (gameSceneObject.bgLeftFishes.x < 0 - gameSceneObject.bgLeftFishes.width) {
-      gameSceneObject.bgLeftFishes.x = app.renderer.width + gameSceneObject.bgLeftFishes.width;
+    if (bgLeftFishes.displayObject.x < 0 - bgLeftFishes.displayObject.width) {
+      bgLeftFishes.displayObject.x = app.renderer.width + bgLeftFishes.displayObject.width;
     }
   }
 
@@ -654,18 +656,29 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
 
     // 背景岩石群
     const rocksTexture = Texture.from(bgRocksImg);
-    gameSceneObject.bgRocks = new TilingSprite(
+    const bgRocks = new TilingSprite(
       rocksTexture,
       rocksTexture.baseTexture.width,
       rocksTexture.baseTexture.height,
     );
+    gameScene.addChild(bgRocks);
 
-    gameScene.addChild(gameSceneObject.bgRocks);
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'bgRocks',
+      description: '背景岩石群',
+      displayObject: bgRocks,
+    }));
 
     // 背景魚群 (左)
-    gameSceneObject.bgLeftFishes = Sprite.from(bgFishesImg);
-    gameSceneObject.bgLeftFishes.position.set(209, 251);
-    gameScene.addChild(gameSceneObject.bgLeftFishes);
+    const bgLeftFishes = Sprite.from(bgFishesImg);
+    bgLeftFishes.position.set(209, 251);
+    gameScene.addChild(bgLeftFishes);
+
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'bgLeftFishes',
+      description: '背景魚群 (左)',
+      displayObject: bgLeftFishes,
+    }));
 
     // 背景魚群 (右)
     gameSceneObject.bgRightFishes = Sprite.from(bgFishesImg);
