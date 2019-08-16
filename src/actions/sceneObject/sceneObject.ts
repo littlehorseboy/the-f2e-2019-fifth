@@ -2,7 +2,6 @@ import { SceneObject } from '../../reducers/sceneObject/sceneObject';
 
 export const ADDSCENEOBJECT = 'ADDSCENEOBJECT';
 
-
 interface AddSceneObjectActionI {
   type: typeof ADDSCENEOBJECT;
   payload: {
