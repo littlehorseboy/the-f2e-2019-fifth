@@ -451,6 +451,13 @@ const initGameScene = (): void => {
     vx: baseVx - 2,
   });
   createSwimmingMarineLife({
+    imgSrc: anemoneImg,
+    positionX: 800,
+    positionY: app.renderer.height,
+    description: '海葵',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
     imgSrc: coralReefImg,
     positionX: 1025,
     positionY: app.renderer.height,
@@ -493,10 +500,10 @@ const initGameScene = (): void => {
     vx: baseVx - 1,
   });
   createSwimmingMarineLife({
-    imgSrc: littleTurtleImg,
+    imgSrc: fishYellowImg,
     positionX: 2200,
-    positionY: 160,
-    description: '小海龜',
+    positionY: 60,
+    description: '黃色小魚',
     vx: baseVx,
   });
   createSwimmingMarineLife({
@@ -522,7 +529,7 @@ const initGameScene = (): void => {
   });
   createSwimmingMarineLife({
     imgSrc: anemonesImg,
-    positionX: 3500,
+    positionX: 3300,
     positionY: app.renderer.height,
     description: '大海葵',
     vx: baseVx,
@@ -548,11 +555,31 @@ const initGameScene = (): void => {
     description: '橘色小魚',
     vx: baseVx - 1,
   });
+  createSwimmingMarineLife({
+    imgSrc: littleTurtleImg,
+    positionX: 3800,
+    positionY: 100,
+    description: '小海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: coralReefImg,
+    positionX: 3800,
+    positionY: app.renderer.height,
+    description: '珊瑚礁',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
+    imgSrc: seahorseImg,
+    positionX: 4000,
+    positionY: 480,
+    description: '海馬',
+    vx: baseVx,
+  });
 
   createSwimmingMarineLife({
     imgSrc: endKindPersonImg,
-    // positionX: 11000,
-    positionX: 1000,
+    positionX: 11000,
     positionY: 200,
     description: '終點',
     vx: baseVx,
@@ -932,11 +959,11 @@ function play(distance: number, delta: number): void {
           -50,
         )
       ) {
-        if (marineLife.description === '終點') {
-          sceneState = end.bind(undefined, 'done');
-        } else {
-          sceneState = end.bind(undefined, 'fail');
-        }
+        // if (marineLife.description === '終點') {
+        //   sceneState = end.bind(undefined, 'done');
+        // } else {
+        //   sceneState = end.bind(undefined, 'fail');
+        // }
       }
 
       // 每次檢查海洋生物們及 toolbarContainer 的高度來提升難度
