@@ -30,6 +30,10 @@ const coralReefImg = require('./assets/images/F2E_week5/Coral_reef.png');
 const anemoneImg = require('./assets/images/F2E_week5/anemone.png');
 const coralImg = require('./assets/images/F2E_week5/coral.png');
 const anemonesImg = require('./assets/images/F2E_week5/Sprite-0002.png');
+const coralReefGrayImg = require('./assets/images/F2E_week5/黑白/Coral_reef_b.png');
+const anemoneGrayImg = require('./assets/images/F2E_week5/黑白/anemone_b.png');
+const coralGrayImg = require('./assets/images/F2E_week5/黑白/coral_b.png');
+const anemonesGrayImg = require('./assets/images/F2E_week5/黑白/anemones_b.png');
 // end swimmingMarineLife
 const bgRocksImg = require('./assets/images/F2E_week5/bg-rocks.png');
 const bgFishesImg = require('./assets/images/F2E_week5/bg-fishes.png');
@@ -572,7 +576,7 @@ function initGameScene(): void {
   createSwimmingMarineLife({
     imgSrc: fishOrangeImg,
     positionX: 4950,
-    positionY: 390,
+    positionY: 370,
     description: '橘色小魚',
     vx: baseVx - 1,
   });
@@ -617,6 +621,118 @@ function initGameScene(): void {
     positionY: 400,
     description: '黃色小魚',
     vx: baseVx - 3,
+  });
+  createSwimmingMarineLife({
+    imgSrc: littleTurtleImg,
+    positionX: 5500,
+    positionY: 450,
+    description: '小海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 8200,
+    positionY: 500,
+    description: '橘色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 8800,
+    positionY: 120,
+    description: '橘色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 8900,
+    positionY: 320,
+    description: '黃色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 9000,
+    positionY: 220,
+    description: '橘色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: coralImg,
+    positionX: 5000,
+    positionY: app.renderer.height,
+    description: '珊瑚',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
+    imgSrc: seahorseImg,
+    positionX: 6700,
+    positionY: 300,
+    description: '海馬',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: coralReefImg,
+    positionX: 5400,
+    positionY: app.renderer.height,
+    description: '珊瑚礁',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 11000,
+    positionY: 320,
+    description: '黃色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 12000,
+    positionY: 220,
+    description: '橘色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: littleTurtleImg,
+    positionX: 7200,
+    positionY: 250,
+    description: '小海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: turtleImg,
+    positionX: 8000,
+    positionY: 37,
+    description: '大海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: coralReefGrayImg,
+    positionX: 6500,
+    positionY: app.renderer.height,
+    description: '珊瑚礁',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
+    imgSrc: anemoneGrayImg,
+    positionX: 6900,
+    positionY: app.renderer.height,
+    description: '海葵',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
+    imgSrc: coralGrayImg,
+    positionX: 7300,
+    positionY: app.renderer.height,
+    description: '珊瑚',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
+    imgSrc: anemonesGrayImg,
+    positionX: 7600,
+    positionY: app.renderer.height,
+    description: '大海葵',
+    vx: baseVx + 0.5,
   });
 
   createSwimmingMarineLife({
@@ -1569,6 +1685,10 @@ const init = (): void => {
     .add('anemoneImg', anemoneImg)
     .add('coralImg', coralImg)
     .add('anemonesImg', anemonesImg)
+    .add('coralReefGrayImg', coralReefGrayImg)
+    .add('anemoneGrayImg', anemoneGrayImg)
+    .add('coralGrayImg', coralGrayImg)
+    .add('anemonesGrayImg', anemonesGrayImg)
     .add('bgRocksImg', bgRocksImg)
     .add('bgFishesImg', bgFishesImg)
     .add('endKindPersonImg', endKindPersonImg)
