@@ -142,7 +142,7 @@ document.addEventListener('visibilitychange', (): void => {
   }
 });
 
-const initGameScene = (): void => {
+function initGameScene(): void {
   // global gameScene 遊戲區
   gameScene = new Container();
   gameScene.visible = false;
@@ -623,6 +623,12 @@ const initGameScene = (): void => {
     );
     dialogContainer.addChild(dialogTitle);
 
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'dialogTitle',
+      description: 'dialog title',
+      displayObject: dialogTitle,
+    }));
+
     const dialogSubTitle = new Text('海龜會吃水母的', new TextStyle({
       fontFamily: 'system-ui, -apple-system, "Roboto", "Helvetica", "Arial", sans-serif',
       fontSize: 40,
@@ -633,6 +639,12 @@ const initGameScene = (): void => {
       143,
     );
     dialogContainer.addChild(dialogSubTitle);
+
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'dialogSubTitle',
+      description: 'dialog subtitle',
+      displayObject: dialogSubTitle,
+    }));
 
     // AgainButtonContainer
     const AgainButtonContainer = new Container();
@@ -652,7 +664,7 @@ const initGameScene = (): void => {
       store.dispatch(removeAllSceneObject('gameScene'));
       initGameScene();
       endScene.parent.removeChild(endScene);
-      initEndScene();
+      initEndScene(); // eslint-disable-line @typescript-eslint/no-use-before-define
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       sceneState = play.bind(undefined, 90);
     });
@@ -684,10 +696,10 @@ const initGameScene = (): void => {
   };
 
   initOverlap();
-};
+}
 
 // 初始化結束場景
-const initEndScene = (): void => {
+function initEndScene(): void {
   endScene = new Container();
   endScene.visible = false;
   app.stage.addChild(endScene);
@@ -695,7 +707,7 @@ const initEndScene = (): void => {
   const endOverlapContainer = new Container();
   endScene.addChild(endOverlapContainer);
 
-  // 小視窗背景
+  // 整片背景微透明黑
   const overlapBackground = new Graphics();
   overlapBackground.alpha = 0.9;
   overlapBackground.beginFill(0x000000);
@@ -712,34 +724,34 @@ const initEndScene = (): void => {
   );
   endOverlapContainer.addChild(kindPerson);
 
-  const dialogTitle = new Text('恭喜!    被好心人收走', createPixelMplusTextStyle(60, '#FFDF55'));
-  dialogTitle.position.set(
-    app.renderer.width / 2 - dialogTitle.width / 2,
+  const title = new Text('恭喜!    被好心人收走', createPixelMplusTextStyle(60, '#FFDF55'));
+  title.position.set(
+    app.renderer.width / 2 - title.width / 2,
     369,
   );
-  endOverlapContainer.addChild(dialogTitle);
+  endOverlapContainer.addChild(title);
 
-  const dialogSubTitle = new Text('只有少數垃圾能被撿走', new TextStyle({
+  const subTitle = new Text('只有少數垃圾能被撿走', new TextStyle({
     fontFamily: 'system-ui, -apple-system, "Roboto", "Helvetica", "Arial", sans-serif',
     fontSize: 40,
     fill: '#FFFFFF',
   }));
-  dialogSubTitle.position.set(
-    app.renderer.width / 2 - dialogSubTitle.width / 2,
+  subTitle.position.set(
+    app.renderer.width / 2 - subTitle.width / 2,
     460,
   );
-  endOverlapContainer.addChild(dialogSubTitle);
+  endOverlapContainer.addChild(subTitle);
 
-  const dialogSubTitleTwo = new Text('減少源頭 少用塑膠用品 才是最有效的', new TextStyle({
+  const subTitleTwo = new Text('減少源頭 少用塑膠用品 才是最有效的', new TextStyle({
     fontFamily: 'system-ui, -apple-system, "Roboto", "Helvetica", "Arial", sans-serif',
     fontSize: 40,
     fill: '#FFFFFF',
   }));
-  dialogSubTitleTwo.position.set(
-    app.renderer.width / 2 - dialogSubTitleTwo.width / 2,
+  subTitleTwo.position.set(
+    app.renderer.width / 2 - subTitleTwo.width / 2,
     512,
   );
-  endOverlapContainer.addChild(dialogSubTitleTwo);
+  endOverlapContainer.addChild(subTitleTwo);
 
   // AgainButtonContainer
   const AgainButtonContainer = new Container();
@@ -780,9 +792,14 @@ const initEndScene = (): void => {
   );
 
   endOverlapContainer.addChild(AgainButtonContainer);
-};
+}
 
-const end = (status: 'done' | 'fail', delta: number): void => {
+const end = (
+  status: 'done' | 'fail',
+  failDescription: '橘色小魚' | '黃色小魚' | '海葵' | '珊瑚礁' | '大海龜' | '海馬'
+  | '珊瑚' | '龍王鯛' | '龍頭鸚哥魚' | '大海葵' | '小海龜',
+  delta: number,
+): void => {
   if (status === 'done') {
     endScene.visible = true;
   } else {
@@ -790,6 +807,20 @@ const end = (status: 'done' | 'fail', delta: number): void => {
     const overlapContainer = state.sceneObjectReducer.gameScene
       .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'overlapContainer');
     if (overlapContainer) {
+      const dialogTitle = state.sceneObjectReducer.gameScene
+        .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'dialogTitle');
+      const dialogSubTitle = state.sceneObjectReducer.gameScene
+        .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'dialogSubTitle');
+
+      if (dialogTitle && dialogSubTitle) {
+        if (failDescription === '大海龜') {
+          debugger;
+        } else if (failDescription === '海葵') {
+          (dialogTitle.displayObject as PIXI.Text).text = '殺死海葵了';
+          (dialogSubTitle.displayObject as PIXI.Text).text = '海葵被纏住 窒息而死';
+        }
+      }
+
       overlapContainer.displayObject.visible = true;
     }
   }
@@ -959,11 +990,11 @@ function play(distance: number, delta: number): void {
           -50,
         )
       ) {
-        // if (marineLife.description === '終點') {
-        //   sceneState = end.bind(undefined, 'done');
-        // } else {
-        //   sceneState = end.bind(undefined, 'fail');
-        // }
+        if (marineLife.description === '終點') {
+          sceneState = end.bind(undefined, 'done', undefined);
+        } else {
+          sceneState = end.bind(undefined, 'fail', marineLife.description);
+        }
       }
 
       // 每次檢查海洋生物們及 toolbarContainer 的高度來提升難度
