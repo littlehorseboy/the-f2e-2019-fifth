@@ -35,6 +35,7 @@ const bgRocksImg = require('./assets/images/F2E_week5/bg-rocks.png');
 const bgFishesImg = require('./assets/images/F2E_week5/bg-fishes.png');
 const endKindPersonImg = require('./assets/images/F2E_week5/end.png');
 const kindPersonImg = require('./assets/images/F2E_week5/kindperson.png');
+const poorTurtleImg = require('./assets/images/F2E_week5/poor-turtle.png');
 
 const {
   Application,
@@ -63,6 +64,12 @@ let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
 let endScene: PIXI.Container; // 碰撞後或結束場景
 const swimmingMarineLifeIds: string[] = []; // 游泳的海洋生物們 碰撞目標 Id
+interface FailDescriptionDialogI {
+  failDescription: '大海龜' | '龍王鯛' | '隆頭鸚哥魚' | '黃色小魚' | '橘色小魚' | '海馬'
+  | '珊瑚礁' | '珊瑚' | '大海葵' | '海葵' | '小海龜';
+  displayObject: PIXI.Container;
+}
+let failDescriptionDialog: FailDescriptionDialogI[] = [];
 let gameKarmaScene: PIXI.Container; // 業障場景
 
 // 創造由上而下的漸層背景
@@ -416,6 +423,13 @@ function initGameScene(): void {
   const baseVx = -2;
 
   createSwimmingMarineLife({
+    imgSrc: littleTurtleImg,
+    positionX: 200,
+    positionY: app.renderer.height,
+    description: '小海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
     imgSrc: fishOrangeImg,
     positionX: 450,
     positionY: 100,
@@ -509,7 +523,7 @@ function initGameScene(): void {
   createSwimmingMarineLife({
     imgSrc: cheilinusUndulatusImg,
     positionX: 2500,
-    positionY: 440,
+    positionY: 410,
     description: '龍王鯛',
     vx: baseVx,
   });
@@ -517,29 +531,36 @@ function initGameScene(): void {
     imgSrc: bolbometoponMuricatumImg,
     positionX: 2900,
     positionY: 80,
-    description: '龍頭鸚哥魚',
+    description: '隆頭鸚哥魚',
     vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 5000,
+    positionY: app.renderer.height - 200,
+    description: '橘色小魚',
+    vx: baseVx - 3,
   });
   createSwimmingMarineLife({
     imgSrc: anemoneImg,
     positionX: 3100,
     positionY: app.renderer.height,
     description: '海葵',
-    vx: baseVx,
+    vx: baseVx + 0.5,
   });
   createSwimmingMarineLife({
     imgSrc: anemonesImg,
     positionX: 3300,
     positionY: app.renderer.height,
     description: '大海葵',
-    vx: baseVx,
+    vx: baseVx + 0.5,
   });
   createSwimmingMarineLife({
     imgSrc: anemoneImg,
     positionX: 3800,
     positionY: app.renderer.height,
     description: '海葵',
-    vx: baseVx,
+    vx: baseVx + 0.5,
   });
   createSwimmingMarineLife({
     imgSrc: fishYellowImg,
@@ -556,10 +577,24 @@ function initGameScene(): void {
     vx: baseVx - 1,
   });
   createSwimmingMarineLife({
+    imgSrc: cheilinusUndulatusImg,
+    positionX: 3500,
+    positionY: 120,
+    description: '龍王鯛',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
     imgSrc: littleTurtleImg,
     positionX: 3800,
     positionY: 100,
     description: '小海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: seahorseImg,
+    positionX: 3900,
+    positionY: 480,
+    description: '海馬',
     vx: baseVx,
   });
   createSwimmingMarineLife({
@@ -570,11 +605,18 @@ function initGameScene(): void {
     vx: baseVx + 0.5,
   });
   createSwimmingMarineLife({
-    imgSrc: seahorseImg,
-    positionX: 4000,
-    positionY: 480,
-    description: '海馬',
+    imgSrc: turtleImg,
+    positionX: 4900,
+    positionY: 37,
+    description: '大海龜',
     vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 10000,
+    positionY: 400,
+    description: '黃色小魚',
+    vx: baseVx - 3,
   });
 
   createSwimmingMarineLife({
@@ -604,95 +646,264 @@ function initGameScene(): void {
     overlapBackground.endFill();
     overlapContainer.addChild(overlapBackground);
 
-    // 小視窗 Container
-    const dialogContainer = new Container();
+    interface DescriptionDialogParamsI {
+      width: number;
+      height: number;
+      imgSrc?: string;
+      titleText: string;
+      subTitleText: string;
+      subTitle2Text?: string;
+    }
 
-    // 小視窗
-    const dialog = new Graphics();
-    dialog.alpha = 0.8;
-    dialog.beginFill(0x000000);
-    dialog.lineStyle(1, 0x707070, 1);
-    dialog.drawRect(0, 0, 700, 400);
-    dialog.endFill();
-    dialogContainer.addChild(dialog);
+    const createDescriptionDialog = (params: DescriptionDialogParamsI): PIXI.Container => {
+      // 小視窗 Container
+      const dialogContainer = new Container();
+      dialogContainer.visible = false;
 
-    const dialogTitle = new Text('殺死海龜了!', createPixelMplusTextStyle(60, '#FF5555'));
-    dialogTitle.position.set(
-      dialog.width / 2 - dialogTitle.width / 2,
-      54,
-    );
-    dialogContainer.addChild(dialogTitle);
+      // 小視窗
+      const dialog = new Graphics();
+      dialog.alpha = 0.8;
+      dialog.beginFill(0x000000);
+      dialog.lineStyle(1, 0x707070, 1);
+      dialog.drawRect(0, 0, params.width, params.height);
+      dialog.endFill();
+      dialogContainer.addChild(dialog);
 
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'dialogTitle',
-      description: 'dialog title',
-      displayObject: dialogTitle,
-    }));
+      const dialogBodyContainer = new Container();
 
-    const dialogSubTitle = new Text('海龜會吃水母的', new TextStyle({
-      fontFamily: 'system-ui, -apple-system, "Roboto", "Helvetica", "Arial", sans-serif',
-      fontSize: 40,
-      fill: '#FFFFFF',
-    }));
-    dialogSubTitle.position.set(
-      dialog.width / 2 - dialogSubTitle.width / 2,
-      143,
-    );
-    dialogContainer.addChild(dialogSubTitle);
+      const dialogTitle = new Text(params.titleText, createPixelMplusTextStyle(60, '#FF5555'));
+      dialogTitle.position.set(
+        dialog.width / 2 - dialogTitle.width / 2,
+        54,
+      );
+      dialogBodyContainer.addChild(dialogTitle);
 
-    store.dispatch(addSceneObject('gameScene', {
-      id: 'dialogSubTitle',
-      description: 'dialog subtitle',
-      displayObject: dialogSubTitle,
-    }));
+      const dialogSubTitle = new Text(params.subTitleText, new TextStyle({
+        fontFamily: 'system-ui, -apple-system, "Roboto", "Helvetica", "Arial", sans-serif',
+        fontSize: 40,
+        fill: '#FFFFFF',
+      }));
+      dialogSubTitle.position.set(
+        dialog.width / 2 - dialogSubTitle.width / 2,
+        143,
+      );
+      dialogBodyContainer.addChild(dialogSubTitle);
 
-    // AgainButtonContainer
-    const AgainButtonContainer = new Container();
+      if (params.subTitle2Text) {
+        const dialogSubTitle2 = new Text(params.subTitle2Text, new TextStyle({
+          fontFamily: 'system-ui, -apple-system, "Roboto", "Helvetica", "Arial", sans-serif',
+          fontSize: 40,
+          fill: '#FFFFFF',
+        }));
+        dialogSubTitle2.position.set(
+          dialog.width / 2 - dialogSubTitle2.width / 2,
+          193,
+        );
+        dialogBodyContainer.addChild(dialogSubTitle2);
+      }
 
-    // 按鈕 Rectangle
-    const AgainButtonGraphic = new Graphics();
-    AgainButtonGraphic.lineStyle(5, 0xFFFFFF, 1);
-    AgainButtonGraphic.drawRect(0, 0, 200, 80);
-    AgainButtonGraphic.endFill();
-    AgainButtonGraphic.hitArea = new Rectangle(0, 0, 240, 80);
-    AgainButtonGraphic.interactive = true;
-    AgainButtonGraphic.buttonMode = true;
-    AgainButtonGraphic.on('click', (): void => {
-      countdown.setCountdownStatus('stop');
-      countdown.setCountdownStatus('play');
-      gameScene.parent.removeChild(gameScene);
-      store.dispatch(removeAllSceneObject('gameScene'));
-      initGameScene();
-      endScene.parent.removeChild(endScene);
-      initEndScene(); // eslint-disable-line @typescript-eslint/no-use-before-define
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      sceneState = play.bind(undefined, 90);
+      // AgainButtonContainer
+      const AgainButtonContainer = new Container();
+
+      // 按鈕 Rectangle
+      const AgainButtonGraphic = new Graphics();
+      AgainButtonGraphic.lineStyle(5, 0xFFFFFF, 1);
+      AgainButtonGraphic.drawRect(0, 0, 200, 80);
+      AgainButtonGraphic.endFill();
+      AgainButtonGraphic.hitArea = new Rectangle(0, 0, 240, 80);
+      AgainButtonGraphic.interactive = true;
+      AgainButtonGraphic.buttonMode = true;
+      AgainButtonGraphic.on('click', (): void => {
+        countdown.setCountdownStatus('stop');
+        countdown.setCountdownStatus('play');
+        gameScene.parent.removeChild(gameScene);
+        store.dispatch(removeAllSceneObject('gameScene'));
+        failDescriptionDialog = [];
+        initGameScene();
+        endScene.parent.removeChild(endScene);
+        initEndScene(); // eslint-disable-line @typescript-eslint/no-use-before-define
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        sceneState = play.bind(undefined, 90);
+      });
+      AgainButtonContainer.addChild(AgainButtonGraphic);
+
+      // 按鈕文字
+      const AgainButtonText = new Text('Again', createPixelMplusTextStyle(56));
+      AgainButtonText.position.set(
+        AgainButtonGraphic.width / 2 - AgainButtonText.width / 2,
+        AgainButtonGraphic.height / 2 - AgainButtonText.height / 2,
+      );
+      AgainButtonContainer.addChild(AgainButtonText);
+
+      // AgainButtonContainer 填完內容後最後定位
+      AgainButtonContainer.position.set(
+        dialog.width / 2 - AgainButtonContainer.width / 2,
+        252,
+      );
+
+      dialogBodyContainer.addChild(AgainButtonContainer);
+
+      let sprite: PIXI.Sprite;
+      if (params.imgSrc) {
+        sprite = Sprite.from(params.imgSrc);
+        sprite.position.set(
+          dialog.width / 2 - sprite.width / 2,
+          30,
+        );
+        dialogContainer.addChild(sprite);
+
+        dialogBodyContainer.position.set(
+          dialogBodyContainer.x,
+          sprite.height,
+        );
+      }
+
+      dialogContainer.addChild(dialogBodyContainer);
+
+      // dialogContainer 填完內容後最後定位
+      dialogContainer.position.set(
+        app.renderer.width / 2 - dialogContainer.width / 2,
+        app.renderer.height / 2 - dialogContainer.height / 2,
+      );
+
+      return dialogContainer;
+    };
+
+    const turtleContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死海龜了!',
+      subTitleText: '海龜會吃水母的',
     });
-    AgainButtonContainer.addChild(AgainButtonGraphic);
+    failDescriptionDialog.push({
+      failDescription: '大海龜',
+      displayObject: turtleContainer,
+    });
+    overlapContainer.addChild(turtleContainer);
 
-    // 按鈕文字
-    const AgainButtonText = new Text('Again', createPixelMplusTextStyle(56));
-    AgainButtonText.position.set(
-      AgainButtonGraphic.width / 2 - AgainButtonText.width / 2,
-      AgainButtonGraphic.height / 2 - AgainButtonText.height / 2,
-    );
-    AgainButtonContainer.addChild(AgainButtonText);
+    const cheilinusUndulatusContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死龍王鯛了!',
+      subTitleText: '龍王鯛原名曲紋唇魚',
+      subTitle2Text: '是保育類 剩不到10隻阿',
+    });
+    failDescriptionDialog.push({
+      failDescription: '龍王鯛',
+      displayObject: cheilinusUndulatusContainer,
+    });
+    overlapContainer.addChild(cheilinusUndulatusContainer);
 
-    // AgainButtonContainer 填完內容後最後定位
-    AgainButtonContainer.position.set(
-      dialog.width / 2 - AgainButtonContainer.width / 2,
-      242,
-    );
+    const bolbometoponMuricatumContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死隆頭鸚哥魚了!',
+      subTitleText: '隆頭鸚哥魚是保育類',
+      subTitle2Text: '剩不到10隻阿',
+    });
+    failDescriptionDialog.push({
+      failDescription: '隆頭鸚哥魚',
+      displayObject: bolbometoponMuricatumContainer,
+    });
+    overlapContainer.addChild(bolbometoponMuricatumContainer);
 
-    dialogContainer.addChild(AgainButtonContainer);
+    const fishYellowContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死黃色小魚了!',
+      subTitleText: '不知道是甚麼品種的小魚',
+    });
+    failDescriptionDialog.push({
+      failDescription: '黃色小魚',
+      displayObject: fishYellowContainer,
+    });
+    overlapContainer.addChild(fishYellowContainer);
 
-    // dialogContainer 填完內容後最後定位
-    dialogContainer.position.set(
-      app.renderer.width / 2 - dialogContainer.width / 2,
-      200,
-    );
+    const fishOrangeContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死橘色小魚了!',
+      subTitleText: '不知道是甚麼品種的小魚',
+    });
+    failDescriptionDialog.push({
+      failDescription: '橘色小魚',
+      displayObject: fishOrangeContainer,
+    });
+    overlapContainer.addChild(fishOrangeContainer);
 
-    overlapContainer.addChild(dialogContainer);
+    const seahorseContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死海馬了!',
+      subTitleText: '海馬被纏住窒息而死',
+    });
+    failDescriptionDialog.push({
+      failDescription: '海馬',
+      displayObject: seahorseContainer,
+    });
+    overlapContainer.addChild(seahorseContainer);
+
+    const coralReefContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死珊瑚了!',
+      subTitleText: '珊瑚被纏住 窒息而死',
+    });
+    failDescriptionDialog.push({
+      failDescription: '珊瑚礁',
+      displayObject: coralReefContainer,
+    });
+    overlapContainer.addChild(coralReefContainer);
+
+    const coralContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死珊瑚了!',
+      subTitleText: '珊瑚被纏住 窒息而死',
+    });
+    failDescriptionDialog.push({
+      failDescription: '珊瑚',
+      displayObject: coralContainer,
+    });
+    overlapContainer.addChild(coralContainer);
+
+    const anemonesContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死海葵了!',
+      subTitleText: '海葵被纏住 窒息而死',
+    });
+    failDescriptionDialog.push({
+      failDescription: '大海葵',
+      displayObject: anemonesContainer,
+    });
+    overlapContainer.addChild(anemonesContainer);
+
+    const anemoneContainer = createDescriptionDialog({
+      width: 700,
+      height: 400,
+      titleText: '殺死海葵了!',
+      subTitleText: '海葵被纏住 窒息而死',
+    });
+    failDescriptionDialog.push({
+      failDescription: '海葵',
+      displayObject: anemoneContainer,
+    });
+    overlapContainer.addChild(anemoneContainer);
+
+    const littleTurtleContainer = createDescriptionDialog({
+      width: 700,
+      height: 480,
+      imgSrc: poorTurtleImg,
+      titleText: '海龜一生都不開心',
+      subTitleText: '你一生陪著小海龜',
+      subTitle2Text: '綁在海龜的肚子上...',
+    });
+    failDescriptionDialog.push({
+      failDescription: '小海龜',
+      displayObject: littleTurtleContainer,
+    });
+    overlapContainer.addChild(littleTurtleContainer);
   };
 
   initOverlap();
@@ -769,9 +980,10 @@ function initEndScene(): void {
     countdown.setCountdownStatus('play');
     gameScene.parent.removeChild(gameScene);
     store.dispatch(removeAllSceneObject('gameScene'));
+    failDescriptionDialog = [];
     initGameScene();
     endScene.parent.removeChild(endScene);
-    initEndScene();
+    initEndScene(); // eslint-disable-line @typescript-eslint/no-use-before-define
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     sceneState = play.bind(undefined, 90);
   });
@@ -796,8 +1008,8 @@ function initEndScene(): void {
 
 const end = (
   status: 'done' | 'fail',
-  failDescription: '橘色小魚' | '黃色小魚' | '海葵' | '珊瑚礁' | '大海龜' | '海馬'
-  | '珊瑚' | '龍王鯛' | '龍頭鸚哥魚' | '大海葵' | '小海龜',
+  failDescription: '大海龜' | '龍王鯛' | '隆頭鸚哥魚' | '黃色小魚' | '橘色小魚' | '海馬'
+  | '珊瑚礁' | '珊瑚' | '大海葵' | '海葵' | '小海龜',
   delta: number,
 ): void => {
   if (status === 'done') {
@@ -807,18 +1019,12 @@ const end = (
     const overlapContainer = state.sceneObjectReducer.gameScene
       .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'overlapContainer');
     if (overlapContainer) {
-      const dialogTitle = state.sceneObjectReducer.gameScene
-        .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'dialogTitle');
-      const dialogSubTitle = state.sceneObjectReducer.gameScene
-        .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'dialogSubTitle');
+      const dialog = failDescriptionDialog.find(
+        (descriptionDialog): boolean => descriptionDialog.failDescription === failDescription,
+      );
 
-      if (dialogTitle && dialogSubTitle) {
-        if (failDescription === '大海龜') {
-          debugger;
-        } else if (failDescription === '海葵') {
-          (dialogTitle.displayObject as PIXI.Text).text = '殺死海葵了';
-          (dialogSubTitle.displayObject as PIXI.Text).text = '海葵被纏住 窒息而死';
-        }
+      if (dialog) {
+        dialog.displayObject.visible = true;
       }
 
       overlapContainer.displayObject.visible = true;
@@ -993,7 +1199,7 @@ function play(distance: number, delta: number): void {
         if (marineLife.description === '終點') {
           sceneState = end.bind(undefined, 'done', undefined);
         } else {
-          sceneState = end.bind(undefined, 'fail', marineLife.description);
+          // sceneState = end.bind(undefined, 'fail', marineLife.description);
         }
       }
 
@@ -1367,6 +1573,7 @@ const init = (): void => {
     .add('bgFishesImg', bgFishesImg)
     .add('endKindPersonImg', endKindPersonImg)
     .add('kindPersonImg', kindPersonImg)
+    .add('poorTurtleImg', poorTurtleImg)
     .on('progress', loadProgressHandler)
     .load(setup);
 };
