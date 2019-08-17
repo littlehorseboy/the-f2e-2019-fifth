@@ -18,6 +18,7 @@ const plasticBagJumpImg = require('./assets/images/F2E_week5/jump.png');
 const bgRockImgLeft = require('./assets/images/bg-rock/rock2.png');
 const bgRockImgCenter = require('./assets/images/bg-rock/rock3.png');
 const bgRockImgRight = require('./assets/images/bg-rock/rock.png');
+// swimmingMarineLife
 const turtleImg = require('./assets/images/F2E_week5/turtle.png');
 const cheilinusUndulatusImg = require('./assets/images/F2E_week5/龍王鯛.png');
 const bolbometoponMuricatumImg = require('./assets/images/F2E_week5/龍頭鸚哥魚.png');
@@ -29,8 +30,11 @@ const coralReefImg = require('./assets/images/F2E_week5/Coral_reef.png');
 const anemoneImg = require('./assets/images/F2E_week5/anemone.png');
 const coralImg = require('./assets/images/F2E_week5/coral.png');
 const anemonesImg = require('./assets/images/F2E_week5/Sprite-0002.png');
+// end swimmingMarineLife
 const bgRocksImg = require('./assets/images/F2E_week5/bg-rocks.png');
 const bgFishesImg = require('./assets/images/F2E_week5/bg-fishes.png');
+const endKindPersonImg = require('./assets/images/F2E_week5/end.png');
+const kindPersonImg = require('./assets/images/F2E_week5/kindperson.png');
 
 const {
   Application,
@@ -57,7 +61,8 @@ document.body.appendChild(app.view);
 let sceneState: (delta: number, distance?: number) => void; // 遊戲場景狀態
 let gameStartScene: PIXI.Container; // 遊戲開始畫面場景
 let gameScene: PIXI.Container; // 遊戲場景
-const swimmingMarineLifeIds: string[] = [];
+let endScene: PIXI.Container; // 碰撞後或結束場景
+const swimmingMarineLifeIds: string[] = []; // 游泳的海洋生物們 碰撞目標 Id
 let gameKarmaScene: PIXI.Container; // 業障場景
 
 // 創造由上而下的漸層背景
@@ -374,274 +379,293 @@ const initGameScene = (): void => {
   };
 
   // 會一直游過來的海洋生物們
-  ((): void => {
-    const coralReef = Sprite.from(coralReefImg);
-    coralReef.position.set(
-      1025,
-      app.renderer.height - coralReef.height - toolbarContainer.height,
+  interface CreateSwimmingMarineLifeI {
+    imgSrc: string;
+    positionX: number;
+    positionY: number;
+    description: string;
+    vx: number;
+  }
+  /**
+   * 創造一直往左游的海洋生物，加進 gameScene 場景，創建 Id，push 進 swimmingMarineLifeIds，加進 redux store
+   * @param {string} params.imgSrc 圖片路徑，用來產生 PIXI.Sprite
+   * @param {string} params.positionX x
+   * @param {string} params.positionY y
+   * @param {string} params.description 描述
+   * @param {string} params.vx 向左游的速度
+   */
+  const createSwimmingMarineLife = (params: CreateSwimmingMarineLifeI): void => {
+    const sprite = Sprite.from(params.imgSrc);
+    sprite.position.set(
+      params.positionX,
+      params.positionY,
     );
-    gameScene.addChild(coralReef);
+    gameScene.addChild(sprite);
 
-    const id = `coralReef-${uuidv4()}`;
+    const id = `sprite-${uuidv4()}`;
     swimmingMarineLifeIds.push(id);
     store.dispatch(addSceneObject('gameScene', {
       id,
-      description: '珊瑚礁',
-      displayObject: coralReef,
-      vx: -2,
+      description: params.description,
+      displayObject: sprite,
+      vx: params.vx,
     }));
-  })();
+  };
 
-  ((): void => {
-    const turtle = Sprite.from(turtleImg);
-    turtle.position.set(
-      1300,
-      37,
-    );
-    gameScene.addChild(turtle);
+  // 向左游的基本速度 (通常是小魚會在 - 1 讓他快一些)
+  const baseVx = -2;
 
-    const id = `turtle-${uuidv4()}`;
-    swimmingMarineLifeIds.push(id);
-    store.dispatch(addSceneObject('gameScene', {
-      id,
-      description: '大海龜',
-      displayObject: turtle,
-      vx: -2,
-    }));
-  })();
-
-  ((): void => {
-    const seahorse = Sprite.from(seahorseImg);
-    seahorse.position.set(
-      1480,
-      500,
-    );
-    gameScene.addChild(seahorse);
-
-    const id = `seahorse-${uuidv4()}`;
-    swimmingMarineLifeIds.push(id);
-    store.dispatch(addSceneObject('gameScene', {
-      id,
-      description: '海馬',
-      displayObject: seahorse,
-      vx: -2,
-    }));
-  })();
-
-  ((): void => {
-    const coral = Sprite.from(coralImg);
-    coral.position.set(
-      1725,
-      app.renderer.height - coral.height - toolbarContainer.height,
-    );
-    gameScene.addChild(coral);
-
-    const id = `coral-${uuidv4()}`;
-    swimmingMarineLifeIds.push(id);
-    store.dispatch(addSceneObject('gameScene', {
-      id,
-      description: '珊瑚',
-      displayObject: coral,
-      vx: -2,
-    }));
-  })();
-
-  ((): void => {
-    const fishYellow = Sprite.from(fishYellowImg);
-    fishYellow.position.set(
-      3000,
-      400,
-    );
-    gameScene.addChild(fishYellow);
-
-    const id = `fishYellow-${uuidv4()}`;
-    swimmingMarineLifeIds.push(id);
-    store.dispatch(addSceneObject('gameScene', {
-      id,
-      description: '黃色小魚',
-      displayObject: fishYellow,
-      vx: -3,
-    }));
-  })();
-
-  ((): void => {
-    const littleTurtle = Sprite.from(littleTurtleImg);
-    littleTurtle.position.set(
-      2200,
-      160,
-    );
-    gameScene.addChild(littleTurtle);
-
-    const id = `littleTurtle-${uuidv4()}`;
-    swimmingMarineLifeIds.push(id);
-    store.dispatch(addSceneObject('gameScene', {
-      id,
-      description: '小海龜',
-      displayObject: littleTurtle,
-      vx: -2,
-    }));
-  })();
-
-  ((): void => {
-    const cheilinus = Sprite.from(cheilinusUndulatusImg);
-    cheilinus.position.set(
-      2500,
-      440,
-    );
-    gameScene.addChild(cheilinus);
-
-    const id = `cheilinus-${uuidv4()}`;
-    swimmingMarineLifeIds.push(id);
-    store.dispatch(addSceneObject('gameScene', {
-      id,
-      description: '龍王鯛',
-      displayObject: cheilinus,
-      vx: -2,
-    }));
-  })();
-
-  ((): void => {
-    const bolbometopon = Sprite.from(bolbometoponMuricatumImg);
-    bolbometopon.position.set(
-      2900,
-      80,
-    );
-    gameScene.addChild(bolbometopon);
-
-    const id = `bolbometopon-${uuidv4()}`;
-    swimmingMarineLifeIds.push(id);
-    store.dispatch(addSceneObject('gameScene', {
-      id,
-      description: '龍頭鸚哥魚',
-      displayObject: bolbometopon,
-      vx: -2,
-    }));
-  })();
-
-  ((): void => {
-    const anemone = Sprite.from(anemoneImg);
-    anemone.position.set(
-      3100,
-      app.renderer.height - anemone.height - toolbarContainer.height,
-    );
-    gameScene.addChild(anemone);
-
-    const id = `anemone-${uuidv4()}`;
-    swimmingMarineLifeIds.push(id);
-    store.dispatch(addSceneObject('gameScene', {
-      id,
-      description: '海葵',
-      displayObject: anemone,
-      vx: -2,
-    }));
-  })();
-
-  ((): void => {
-    const anemones = Sprite.from(anemonesImg);
-    anemones.position.set(
-      3100,
-      app.renderer.height - anemones.height - toolbarContainer.height,
-    );
-    gameScene.addChild(anemones);
-
-    const id = `anemones-${uuidv4()}`;
-    swimmingMarineLifeIds.push(id);
-    store.dispatch(addSceneObject('gameScene', {
-      id,
-      description: '海葵',
-      displayObject: anemones,
-      vx: -2,
-    }));
-  })();
-
-  // 小視窗背景
-  const overlapBackground = new Graphics();
-  // overlapBackground.visible = false;
-  overlapBackground.alpha = 0.6;
-  overlapBackground.beginFill(0x000000);
-  overlapBackground.drawRect(0, 0, app.renderer.width, app.renderer.height);
-  overlapBackground.endFill();
-  gameScene.addChild(overlapBackground);
-
-  // 小視窗 Container
-  const dialogContainer = new Container();
-
-  // 小視窗
-  const dialog = new Graphics();
-  dialog.alpha = 0.8;
-  dialog.beginFill(0x000000);
-  dialog.lineStyle(1, 0x707070, 1);
-  dialog.drawRect(0, 0, 700, 400);
-  dialog.endFill();
-  dialogContainer.addChild(dialog);
-
-  const dialogTitle = new Text('殺死海龜了!', createPixelMplusTextStyle(60, '#FF5555'));
-  dialogTitle.position.set(
-    dialog.width / 2 - dialogTitle.width / 2,
-    54,
-  );
-  dialogContainer.addChild(dialogTitle);
-
-  const dialogSubTitle = new Text('海龜會吃水母的', new TextStyle({
-    fontFamily: 'regularPixelMplus10',
-    fontSize: 40,
-    fill: '#FFFFFF',
-  }));
-  dialogSubTitle.position.set(
-    dialog.width / 2 - dialogSubTitle.width / 2,
-    143,
-  );
-  dialogContainer.addChild(dialogSubTitle);
-
-  // AgainButtonContainer
-  const AgainButtonContainer = new Container();
-
-  // 按鈕 Rectangle
-  const AgainButtonGraphic = new Graphics();
-  AgainButtonGraphic.lineStyle(5, 0xFFFFFF, 1);
-  AgainButtonGraphic.drawRect(0, 0, 200, 80);
-  AgainButtonGraphic.endFill();
-  AgainButtonGraphic.hitArea = new Rectangle(0, 0, 240, 80);
-  AgainButtonGraphic.interactive = true;
-  AgainButtonGraphic.buttonMode = true;
-  AgainButtonGraphic.on('click', (): void => {
-    gameScene.parent.removeChild(gameScene);
-    store.dispatch(removeAllSceneObject('gameScene'));
-    countdown.setCountdownStatus('stop');
-    countdown.setCountdownStatus('play');
-    initGameScene();
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    sceneState = play.bind(undefined, 90);
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 450,
+    positionY: 100,
+    description: '橘色小魚',
+    vx: baseVx - 1,
   });
-  AgainButtonContainer.addChild(AgainButtonGraphic);
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 500,
+    positionY: 190,
+    description: '黃色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 600,
+    positionY: 80,
+    description: '黃色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 690,
+    positionY: 160,
+    description: '橘色小魚',
+    vx: baseVx - 2,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 780,
+    positionY: 40,
+    description: '黃色小魚',
+    vx: baseVx - 2,
+  });
+  createSwimmingMarineLife({
+    imgSrc: coralReefImg,
+    positionX: 1025,
+    positionY: app.renderer.height,
+    description: '珊瑚礁',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
+    imgSrc: turtleImg,
+    positionX: 1300,
+    positionY: 37,
+    description: '大海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: seahorseImg,
+    positionX: 1480,
+    positionY: 500,
+    description: '海馬',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: coralImg,
+    positionX: 1725,
+    positionY: app.renderer.height,
+    description: '珊瑚',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 3000,
+    positionY: 400,
+    description: '黃色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 3150,
+    positionY: 390,
+    description: '橘色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: littleTurtleImg,
+    positionX: 2200,
+    positionY: 160,
+    description: '小海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: cheilinusUndulatusImg,
+    positionX: 2500,
+    positionY: 440,
+    description: '龍王鯛',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: bolbometoponMuricatumImg,
+    positionX: 2900,
+    positionY: 80,
+    description: '龍頭鸚哥魚',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: anemoneImg,
+    positionX: 3100,
+    positionY: app.renderer.height,
+    description: '海葵',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: anemonesImg,
+    positionX: 3500,
+    positionY: app.renderer.height,
+    description: '大海葵',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: anemoneImg,
+    positionX: 3800,
+    positionY: app.renderer.height,
+    description: '海葵',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 4800,
+    positionY: 400,
+    description: '黃色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 4950,
+    positionY: 390,
+    description: '橘色小魚',
+    vx: baseVx - 1,
+  });
 
-  // 按鈕文字
-  const AgainButtonText = new Text('Again', createPixelMplusTextStyle(56));
-  AgainButtonText.position.set(
-    AgainButtonGraphic.width / 2 - AgainButtonText.width / 2,
-    AgainButtonGraphic.height / 2 - AgainButtonText.height / 2,
-  );
-  AgainButtonContainer.addChild(AgainButtonText);
+  createSwimmingMarineLife({
+    imgSrc: endKindPersonImg,
+    // positionX: 11000,
+    positionX: 1000,
+    positionY: 200,
+    description: '終點',
+    vx: baseVx,
+  });
 
-  // AgainButtonContainer 填完內容後最後定位
-  AgainButtonContainer.position.set(
-    dialog.width / 2 - AgainButtonContainer.width / 2,
-    242,
-  );
+  const initOverlap = (): void => {
+    const overlapContainer = new Container();
+    overlapContainer.visible = false;
+    gameScene.addChild(overlapContainer);
 
-  dialogContainer.addChild(AgainButtonContainer);
+    store.dispatch(addSceneObject('gameScene', {
+      id: 'overlapContainer',
+      description: 'overlap container',
+      displayObject: overlapContainer,
+    }));
 
-  // dialogContainer 填完內容後最後定位
-  dialogContainer.position.set(
-    app.renderer.width / 2 - dialogContainer.width / 2,
-    200,
-  );
+    // 小視窗背景
+    const overlapBackground = new Graphics();
+    overlapBackground.alpha = 0.6;
+    overlapBackground.beginFill(0x000000);
+    overlapBackground.drawRect(0, 0, app.renderer.width, app.renderer.height);
+    overlapBackground.endFill();
+    overlapContainer.addChild(overlapBackground);
 
-  gameScene.addChild(dialogContainer);
+    // 小視窗 Container
+    const dialogContainer = new Container();
+
+    // 小視窗
+    const dialog = new Graphics();
+    dialog.alpha = 0.8;
+    dialog.beginFill(0x000000);
+    dialog.lineStyle(1, 0x707070, 1);
+    dialog.drawRect(0, 0, 700, 400);
+    dialog.endFill();
+    dialogContainer.addChild(dialog);
+
+    const dialogTitle = new Text('殺死海龜了!', createPixelMplusTextStyle(60, '#FF5555'));
+    dialogTitle.position.set(
+      dialog.width / 2 - dialogTitle.width / 2,
+      54,
+    );
+    dialogContainer.addChild(dialogTitle);
+
+    const dialogSubTitle = new Text('海龜會吃水母的', new TextStyle({
+      fontFamily: 'regularPixelMplus10',
+      fontSize: 40,
+      fill: '#FFFFFF',
+    }));
+    dialogSubTitle.position.set(
+      dialog.width / 2 - dialogSubTitle.width / 2,
+      143,
+    );
+    dialogContainer.addChild(dialogSubTitle);
+
+    // AgainButtonContainer
+    const AgainButtonContainer = new Container();
+
+    // 按鈕 Rectangle
+    const AgainButtonGraphic = new Graphics();
+    AgainButtonGraphic.lineStyle(5, 0xFFFFFF, 1);
+    AgainButtonGraphic.drawRect(0, 0, 200, 80);
+    AgainButtonGraphic.endFill();
+    AgainButtonGraphic.hitArea = new Rectangle(0, 0, 240, 80);
+    AgainButtonGraphic.interactive = true;
+    AgainButtonGraphic.buttonMode = true;
+    AgainButtonGraphic.on('click', (): void => {
+      gameScene.parent.removeChild(gameScene);
+      store.dispatch(removeAllSceneObject('gameScene'));
+      countdown.setCountdownStatus('stop');
+      countdown.setCountdownStatus('play');
+      initGameScene();
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      sceneState = play.bind(undefined, 90);
+    });
+    AgainButtonContainer.addChild(AgainButtonGraphic);
+
+    // 按鈕文字
+    const AgainButtonText = new Text('Again', createPixelMplusTextStyle(56));
+    AgainButtonText.position.set(
+      AgainButtonGraphic.width / 2 - AgainButtonText.width / 2,
+      AgainButtonGraphic.height / 2 - AgainButtonText.height / 2,
+    );
+    AgainButtonContainer.addChild(AgainButtonText);
+
+    // AgainButtonContainer 填完內容後最後定位
+    AgainButtonContainer.position.set(
+      dialog.width / 2 - AgainButtonContainer.width / 2,
+      242,
+    );
+
+    dialogContainer.addChild(AgainButtonContainer);
+
+    // dialogContainer 填完內容後最後定位
+    dialogContainer.position.set(
+      app.renderer.width / 2 - dialogContainer.width / 2,
+      200,
+    );
+
+    overlapContainer.addChild(dialogContainer);
+  };
+
+  initOverlap();
 };
 
 const end = (): void => {
+  const state = store.getState();
 
+  const endOverlapContainer = state.sceneObjectReducer.endScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'endOverlapContainer');
+
+  if (endOverlapContainer) {
+    endOverlapContainer.displayObject.visible = true;
+  }
 };
 
 const karma = (): void => {
@@ -709,13 +733,13 @@ function play(distance: number, delta: number): void {
     }
   }
 
+  const toolbarContainer = state.sceneObjectReducer.gameScene
+    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'toolbarContainer');
+
   const bgRocks = state.sceneObjectReducer.gameScene
     .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'bgRocks');
 
   if (bgRocks) {
-    const toolbarContainer = state.sceneObjectReducer.gameScene
-      .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'toolbarContainer');
-
     if (toolbarContainer) {
       bgRocks.displayObject.position.set(
         0,
@@ -772,9 +796,6 @@ function play(distance: number, delta: number): void {
       plasticBag.displayObject.y += plasticBag.vy;
     }
 
-    const toolbarContainer = state.sceneObjectReducer.gameScene
-      .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'toolbarContainer');
-
     // 自動下墜
     if (toolbarContainer) {
       if (
@@ -802,7 +823,7 @@ function play(distance: number, delta: number): void {
         });
       }
 
-      // 萬惡塑膠袋與游泳海洋生物發生碰撞
+      // 萬惡塑膠袋與游泳海洋生物或終點發生碰撞
       if (
         plasticBag && hitTestRectangle(
           (marineLife.displayObject as PIXI.Sprite),
@@ -811,7 +832,22 @@ function play(distance: number, delta: number): void {
           -50,
         )
       ) {
-        sceneState = end;
+        if (marineLife.description === '終點') {
+          sceneState = end;
+        }
+        // sceneState = end;
+      }
+
+      if (
+        toolbarContainer
+          && (marineLife.displayObject.y + marineLife.displayObject.height)
+            >= (app.renderer.height - toolbarContainer.displayObject.height)
+      ) {
+        Object.assign(marineLife.displayObject, {
+          y: app.renderer.height
+            - toolbarContainer.displayObject.height
+            - marineLife.displayObject.height,
+        });
       }
     }
   });
@@ -1129,9 +1165,110 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     gameKarmaScene.addChild(backButtonText);
   };
 
+  const initEndScene = (): void => {
+    endScene = new Container();
+    endScene.visible = false;
+    app.stage.addChild(endScene);
+
+    const endOverlapContainer = new Container();
+    endOverlapContainer.visible = false;
+    endScene.addChild(endOverlapContainer);
+
+    store.dispatch(addSceneObject('endScene', {
+      id: 'endOverlapContainer',
+      description: 'end overlap container',
+      displayObject: endOverlapContainer,
+    }));
+
+    // 小視窗背景
+    const overlapBackground = new Graphics();
+    overlapBackground.alpha = 0.6;
+    overlapBackground.beginFill(0x000000);
+    overlapBackground.drawRect(0, 0, app.renderer.width, app.renderer.height);
+    overlapBackground.endFill();
+    endOverlapContainer.addChild(overlapBackground);
+
+    // 小視窗 Container
+    const dialogContainer = new Container();
+
+    // 小視窗
+    const dialog = new Graphics();
+    dialog.alpha = 0.8;
+    dialog.beginFill(0x000000);
+    dialog.lineStyle(1, 0x707070, 1);
+    dialog.drawRect(0, 0, 700, 400);
+    dialog.endFill();
+    dialogContainer.addChild(dialog);
+
+    const dialogTitle = new Text('殺死海龜了!', createPixelMplusTextStyle(60, '#FF5555'));
+    dialogTitle.position.set(
+      dialog.width / 2 - dialogTitle.width / 2,
+      54,
+    );
+    dialogContainer.addChild(dialogTitle);
+
+    const dialogSubTitle = new Text('海龜會吃水母的', new TextStyle({
+      fontFamily: 'regularPixelMplus10',
+      fontSize: 40,
+      fill: '#FFFFFF',
+    }));
+    dialogSubTitle.position.set(
+      dialog.width / 2 - dialogSubTitle.width / 2,
+      143,
+    );
+    dialogContainer.addChild(dialogSubTitle);
+
+    // AgainButtonContainer
+    const AgainButtonContainer = new Container();
+
+    // 按鈕 Rectangle
+    const AgainButtonGraphic = new Graphics();
+    AgainButtonGraphic.lineStyle(5, 0xFFFFFF, 1);
+    AgainButtonGraphic.drawRect(0, 0, 200, 80);
+    AgainButtonGraphic.endFill();
+    AgainButtonGraphic.hitArea = new Rectangle(0, 0, 240, 80);
+    AgainButtonGraphic.interactive = true;
+    AgainButtonGraphic.buttonMode = true;
+    AgainButtonGraphic.on('click', (): void => {
+      gameScene.parent.removeChild(gameScene);
+      store.dispatch(removeAllSceneObject('gameScene'));
+      countdown.setCountdownStatus('stop');
+      countdown.setCountdownStatus('play');
+      initGameScene();
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      sceneState = play.bind(undefined, 90);
+    });
+    AgainButtonContainer.addChild(AgainButtonGraphic);
+
+    // 按鈕文字
+    const AgainButtonText = new Text('Again', createPixelMplusTextStyle(56));
+    AgainButtonText.position.set(
+      AgainButtonGraphic.width / 2 - AgainButtonText.width / 2,
+      AgainButtonGraphic.height / 2 - AgainButtonText.height / 2,
+    );
+    AgainButtonContainer.addChild(AgainButtonText);
+
+    // AgainButtonContainer 填完內容後最後定位
+    AgainButtonContainer.position.set(
+      dialog.width / 2 - AgainButtonContainer.width / 2,
+      242,
+    );
+
+    dialogContainer.addChild(AgainButtonContainer);
+
+    // dialogContainer 填完內容後最後定位
+    dialogContainer.position.set(
+      app.renderer.width / 2 - dialogContainer.width / 2,
+      200,
+    );
+
+    endOverlapContainer.addChild(dialogContainer);
+  };
+
   initStartScene();
   initGameScene();
   initKarmaScene();
+  initEndScene();
 
   // horseTODO: 暫時拿來亂動
   // sceneState = start;
@@ -1168,6 +1305,8 @@ const init = (): void => {
     .add('anemonesImg', anemonesImg)
     .add('bgRocksImg', bgRocksImg)
     .add('bgFishesImg', bgFishesImg)
+    .add('endKindPersonImg', endKindPersonImg)
+    .add('kindPersonImg', kindPersonImg)
     .on('progress', loadProgressHandler)
     .load(setup);
 };

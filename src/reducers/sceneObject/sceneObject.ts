@@ -11,12 +11,14 @@ export interface WithPIXIDisplayObject {
 export interface SceneObjectI {
   startScene: WithPIXIDisplayObject[];
   gameScene: WithPIXIDisplayObject[];
+  endScene: WithPIXIDisplayObject[];
   karmaScene: WithPIXIDisplayObject[];
 }
 
 const initState: SceneObjectI = {
   startScene: [],
   gameScene: [],
+  endScene: [],
   karmaScene: [],
 };
 
