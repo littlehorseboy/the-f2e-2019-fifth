@@ -715,24 +715,101 @@ function initGameScene(): void {
   });
   createSwimmingMarineLife({
     imgSrc: anemoneGrayImg,
-    positionX: 6900,
+    positionX: 6700,
     positionY: app.renderer.height,
     description: '海葵',
     vx: baseVx + 0.5,
   });
   createSwimmingMarineLife({
+    imgSrc: seahorseImg,
+    positionX: 8700,
+    positionY: 300,
+    description: '海馬',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: anemonesGrayImg,
+    positionX: 7200,
+    positionY: app.renderer.height,
+    description: '大海葵',
+    vx: baseVx + 0.5,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 13200,
+    positionY: 220,
+    description: '橘色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 13500,
+    positionY: 320,
+    description: '黃色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 14000,
+    positionY: 250,
+    description: '橘色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: littleTurtleImg,
+    positionX: 9600,
+    positionY: 180,
+    description: '小海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
     imgSrc: coralGrayImg,
-    positionX: 7300,
+    positionX: 7600,
     positionY: app.renderer.height,
     description: '珊瑚',
     vx: baseVx + 0.5,
   });
   createSwimmingMarineLife({
-    imgSrc: anemonesGrayImg,
-    positionX: 7600,
-    positionY: app.renderer.height,
-    description: '大海葵',
-    vx: baseVx + 0.5,
+    imgSrc: littleTurtleImg,
+    positionX: 10600,
+    positionY: 50,
+    description: '小海龜',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: seahorseImg,
+    positionX: 10300,
+    positionY: 400,
+    description: '海馬',
+    vx: baseVx,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 15200,
+    positionY: 70,
+    description: '橘色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 15500,
+    positionY: 100,
+    description: '黃色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishYellowImg,
+    positionX: 15700,
+    positionY: 70,
+    description: '黃色小魚',
+    vx: baseVx - 1,
+  });
+  createSwimmingMarineLife({
+    imgSrc: fishOrangeImg,
+    positionX: 16000,
+    positionY: 150,
+    description: '橘色小魚',
+    vx: baseVx - 1,
   });
 
   createSwimmingMarineLife({
@@ -1315,7 +1392,7 @@ function play(distance: number, delta: number): void {
         if (marineLife.description === '終點') {
           sceneState = end.bind(undefined, 'done', undefined);
         } else {
-          // sceneState = end.bind(undefined, 'fail', marineLife.description);
+          sceneState = end.bind(undefined, 'fail', marineLife.description);
         }
       }
 
