@@ -1642,7 +1642,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     );
     gameKarmaScene.addChild(titleText);
 
-    const subTitleText = new Text('(2/10)', createPixelMplusTextStyle(50, '#151D46'));
+    const subTitleText = new Text('(11/11)', createPixelMplusTextStyle(50, '#151D46'));
     subTitleText.position.set(
       app.renderer.width / 2 - subTitleText.width / 2,
       108,
@@ -1729,11 +1729,7 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
   initEndScene();
   initKarmaScene();
 
-  // horseTODO: 暫時拿來亂動
-  // sceneState = start;
-
-  countdown.setCountdownStatus('play');
-  sceneState = play.bind(undefined, 90);
+  sceneState = start;
 
   app.ticker.add((delta: number): void => gameLoop(delta));
 };
