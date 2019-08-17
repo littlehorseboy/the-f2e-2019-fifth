@@ -597,7 +597,7 @@ const initGameScene = (): void => {
     dialogContainer.addChild(dialogTitle);
 
     const dialogSubTitle = new Text('海龜會吃水母的', new TextStyle({
-      fontFamily: 'regularPixelMplus10',
+      fontFamily: 'system-ui, -apple-system, "Roboto", "Helvetica", "Arial", sans-serif',
       fontSize: 40,
       fill: '#FFFFFF',
     }));
@@ -619,11 +619,13 @@ const initGameScene = (): void => {
     AgainButtonGraphic.interactive = true;
     AgainButtonGraphic.buttonMode = true;
     AgainButtonGraphic.on('click', (): void => {
-      gameScene.parent.removeChild(gameScene);
-      store.dispatch(removeAllSceneObject('gameScene'));
       countdown.setCountdownStatus('stop');
       countdown.setCountdownStatus('play');
+      gameScene.parent.removeChild(gameScene);
+      store.dispatch(removeAllSceneObject('gameScene'));
       initGameScene();
+      endScene.parent.removeChild(endScene);
+      initEndScene();
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       sceneState = play.bind(undefined, 90);
     });
@@ -657,14 +659,112 @@ const initGameScene = (): void => {
   initOverlap();
 };
 
-const end = (): void => {
-  const state = store.getState();
+// 初始化結束場景
+const initEndScene = (): void => {
+  endScene = new Container();
+  endScene.visible = false;
+  app.stage.addChild(endScene);
 
-  const endOverlapContainer = state.sceneObjectReducer.endScene
-    .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'endOverlapContainer');
+  const endOverlapContainer = new Container();
+  endScene.addChild(endOverlapContainer);
 
-  if (endOverlapContainer) {
-    endOverlapContainer.displayObject.visible = true;
+  // 小視窗背景
+  const overlapBackground = new Graphics();
+  overlapBackground.alpha = 0.9;
+  overlapBackground.beginFill(0x000000);
+  overlapBackground.drawRect(0, 0, app.renderer.width, app.renderer.height);
+  overlapBackground.endFill();
+
+  endOverlapContainer.addChild(overlapBackground);
+
+  // kindPerson
+  const kindPerson = Sprite.from(kindPersonImg);
+  kindPerson.position.set(
+    app.renderer.width / 2 - kindPerson.width / 2,
+    8,
+  );
+  endOverlapContainer.addChild(kindPerson);
+
+  const dialogTitle = new Text('恭喜!    被好心人收走', createPixelMplusTextStyle(60, '#FFDF55'));
+  dialogTitle.position.set(
+    app.renderer.width / 2 - dialogTitle.width / 2,
+    369,
+  );
+  endOverlapContainer.addChild(dialogTitle);
+
+  const dialogSubTitle = new Text('只有少數垃圾能被撿走', new TextStyle({
+    fontFamily: 'system-ui, -apple-system, "Roboto", "Helvetica", "Arial", sans-serif',
+    fontSize: 40,
+    fill: '#FFFFFF',
+  }));
+  dialogSubTitle.position.set(
+    app.renderer.width / 2 - dialogSubTitle.width / 2,
+    460,
+  );
+  endOverlapContainer.addChild(dialogSubTitle);
+
+  const dialogSubTitleTwo = new Text('減少源頭 少用塑膠用品 才是最有效的', new TextStyle({
+    fontFamily: 'system-ui, -apple-system, "Roboto", "Helvetica", "Arial", sans-serif',
+    fontSize: 40,
+    fill: '#FFFFFF',
+  }));
+  dialogSubTitleTwo.position.set(
+    app.renderer.width / 2 - dialogSubTitleTwo.width / 2,
+    512,
+  );
+  endOverlapContainer.addChild(dialogSubTitleTwo);
+
+  // AgainButtonContainer
+  const AgainButtonContainer = new Container();
+
+  // 按鈕 Rectangle
+  const AgainButtonGraphic = new Graphics();
+  AgainButtonGraphic.lineStyle(5, 0xFFFFFF, 1);
+  AgainButtonGraphic.drawRect(0, 0, 200, 80);
+  AgainButtonGraphic.endFill();
+  AgainButtonGraphic.hitArea = new Rectangle(0, 0, 240, 80);
+  AgainButtonGraphic.interactive = true;
+  AgainButtonGraphic.buttonMode = true;
+  AgainButtonGraphic.on('click', (): void => {
+    countdown.setCountdownStatus('stop');
+    countdown.setCountdownStatus('play');
+    gameScene.parent.removeChild(gameScene);
+    store.dispatch(removeAllSceneObject('gameScene'));
+    initGameScene();
+    endScene.parent.removeChild(endScene);
+    initEndScene();
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    sceneState = play.bind(undefined, 90);
+  });
+  AgainButtonContainer.addChild(AgainButtonGraphic);
+
+  // 按鈕文字
+  const AgainButtonText = new Text('Again', createPixelMplusTextStyle(56));
+  AgainButtonText.position.set(
+    AgainButtonGraphic.width / 2 - AgainButtonText.width / 2,
+    AgainButtonGraphic.height / 2 - AgainButtonText.height / 2,
+  );
+  AgainButtonContainer.addChild(AgainButtonText);
+
+  // AgainButtonContainer 填完內容後最後定位
+  AgainButtonContainer.position.set(
+    app.renderer.width / 2 - AgainButtonContainer.width / 2,
+    600,
+  );
+
+  endOverlapContainer.addChild(AgainButtonContainer);
+};
+
+const end = (status: 'done' | 'fail', delta: number): void => {
+  if (status === 'done') {
+    endScene.visible = true;
+  } else {
+    const state = store.getState();
+    const overlapContainer = state.sceneObjectReducer.gameScene
+      .find((withPIXIDisplayObject: WithPIXIDisplayObject): boolean => withPIXIDisplayObject.id === 'overlapContainer');
+    if (overlapContainer) {
+      overlapContainer.displayObject.visible = true;
+    }
   }
 };
 
@@ -833,11 +933,13 @@ function play(distance: number, delta: number): void {
         )
       ) {
         if (marineLife.description === '終點') {
-          sceneState = end;
+          sceneState = end.bind(undefined, 'done');
+        } else {
+          sceneState = end.bind(undefined, 'fail');
         }
-        // sceneState = end;
       }
 
+      // 每次檢查海洋生物們及 toolbarContainer 的高度來提升難度
       if (
         toolbarContainer
           && (marineLife.displayObject.y + marineLife.displayObject.height)
@@ -1165,110 +1267,10 @@ const setup = (pixiLoader: PIXI.Loader, resource: PIXI.LoaderResource): void => 
     gameKarmaScene.addChild(backButtonText);
   };
 
-  const initEndScene = (): void => {
-    endScene = new Container();
-    endScene.visible = false;
-    app.stage.addChild(endScene);
-
-    const endOverlapContainer = new Container();
-    endOverlapContainer.visible = false;
-    endScene.addChild(endOverlapContainer);
-
-    store.dispatch(addSceneObject('endScene', {
-      id: 'endOverlapContainer',
-      description: 'end overlap container',
-      displayObject: endOverlapContainer,
-    }));
-
-    // 小視窗背景
-    const overlapBackground = new Graphics();
-    overlapBackground.alpha = 0.6;
-    overlapBackground.beginFill(0x000000);
-    overlapBackground.drawRect(0, 0, app.renderer.width, app.renderer.height);
-    overlapBackground.endFill();
-    endOverlapContainer.addChild(overlapBackground);
-
-    // 小視窗 Container
-    const dialogContainer = new Container();
-
-    // 小視窗
-    const dialog = new Graphics();
-    dialog.alpha = 0.8;
-    dialog.beginFill(0x000000);
-    dialog.lineStyle(1, 0x707070, 1);
-    dialog.drawRect(0, 0, 700, 400);
-    dialog.endFill();
-    dialogContainer.addChild(dialog);
-
-    const dialogTitle = new Text('殺死海龜了!', createPixelMplusTextStyle(60, '#FF5555'));
-    dialogTitle.position.set(
-      dialog.width / 2 - dialogTitle.width / 2,
-      54,
-    );
-    dialogContainer.addChild(dialogTitle);
-
-    const dialogSubTitle = new Text('海龜會吃水母的', new TextStyle({
-      fontFamily: 'regularPixelMplus10',
-      fontSize: 40,
-      fill: '#FFFFFF',
-    }));
-    dialogSubTitle.position.set(
-      dialog.width / 2 - dialogSubTitle.width / 2,
-      143,
-    );
-    dialogContainer.addChild(dialogSubTitle);
-
-    // AgainButtonContainer
-    const AgainButtonContainer = new Container();
-
-    // 按鈕 Rectangle
-    const AgainButtonGraphic = new Graphics();
-    AgainButtonGraphic.lineStyle(5, 0xFFFFFF, 1);
-    AgainButtonGraphic.drawRect(0, 0, 200, 80);
-    AgainButtonGraphic.endFill();
-    AgainButtonGraphic.hitArea = new Rectangle(0, 0, 240, 80);
-    AgainButtonGraphic.interactive = true;
-    AgainButtonGraphic.buttonMode = true;
-    AgainButtonGraphic.on('click', (): void => {
-      gameScene.parent.removeChild(gameScene);
-      store.dispatch(removeAllSceneObject('gameScene'));
-      countdown.setCountdownStatus('stop');
-      countdown.setCountdownStatus('play');
-      initGameScene();
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      sceneState = play.bind(undefined, 90);
-    });
-    AgainButtonContainer.addChild(AgainButtonGraphic);
-
-    // 按鈕文字
-    const AgainButtonText = new Text('Again', createPixelMplusTextStyle(56));
-    AgainButtonText.position.set(
-      AgainButtonGraphic.width / 2 - AgainButtonText.width / 2,
-      AgainButtonGraphic.height / 2 - AgainButtonText.height / 2,
-    );
-    AgainButtonContainer.addChild(AgainButtonText);
-
-    // AgainButtonContainer 填完內容後最後定位
-    AgainButtonContainer.position.set(
-      dialog.width / 2 - AgainButtonContainer.width / 2,
-      242,
-    );
-
-    dialogContainer.addChild(AgainButtonContainer);
-
-    // dialogContainer 填完內容後最後定位
-    dialogContainer.position.set(
-      app.renderer.width / 2 - dialogContainer.width / 2,
-      200,
-    );
-
-    endOverlapContainer.addChild(dialogContainer);
-  };
-
   initStartScene();
   initGameScene();
-  initKarmaScene();
   initEndScene();
+  initKarmaScene();
 
   // horseTODO: 暫時拿來亂動
   // sceneState = start;
